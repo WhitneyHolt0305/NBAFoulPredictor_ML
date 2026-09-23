@@ -1,0 +1,181 @@
+---
+title: "Simulated Fouls | Project 01"
+format: typst
+---
+
+This file simulates NBA game data that will reflect our project's data generating process:
+    - Total fouls called in a game, driven by the officiating crew plus game context (team foul/pace tendencies, home/away, playoff flag).
+    - Foul counts are non-negative, whole numbers.
+    - We generate from a Poisson distribution whose mean depends on crew and context
+    - Will mirror count-based model planned to fit to reald data.
+
+Output: simulated_games.csv (one row per game).
+
+## Imports
+```{python}
+import numpy as np
+import pandas as pd
+```
+
+## Reproducible Results
+```{python}
+rng = np.random.default_rng(42)
+```
+
+## Game Settings (Fake)
+```{python}
+nGames = 1000                   ## how many games to simulate
+nCrews = 15                     ## number of distinct officiating crews
+nTeams = 30                     ## NBA has 30 teams
+playoffShare = 0.15            ## fraction of games that are playoff games
+```
+
+## Crew's Foul Tendencies
+    - Some crews will call more (tight), some will call fewer (loose)
+    - We're pretending referees have real, consistent differences
+```{python}
+crewEffect = rng.normal(loc=0.0, scale=0.12, size=nCrews)
+```
+
+## Teams Foul Tendencies (How many they tend to commit)
+    - Some teams will commit more fouls than others
+```{python}
+teamEffect = rng.normal(loc=0.0, scale=0.08, size=nTeams)
+```
+
+## Baseline
+```{python}
+baseline = 42
+```
+
+## Main Logic
+    - Start at league average of 42 fouls, nudge up/down based on who's officiating, who's playing, and if playoffs.
+    - Result: expected number of fouls for specific game.
+```{python}
+rows = []
+for game in range(nGames):
+    crew = rng.integers(0, nCrews)
+    homeTeam = rng.integers(0, nTeams)
+    awayTeam = rng.integers(0, nTeams)
+    while awayTeam == homeTeam:
+        awayTeam = rng.integers(0, nTeams)
+
+    isPlayoff = rng.random() < playoffShare
+
+## Building Expected Number of Fouls on Log Scale
+    logMean = np.log(baseline)
+    logMean += crewEffect[crew]                   ## crew's fingerprint
+    logMean += teamEffect[homeTeam]               ## home team tendency
+    logMean += teamEffect[awayTeam]               ## away team tendency
+    logMean += -0.06 if isPlayoff else 0.0        ## refs call fewer fouls in playoffs
+    logMean += -0.02                              ## small home-court effect (fewer fouls on home)
+
+    expectedFouls = np.exp(logMean)
+
+## Adding real world randomness - real games aren't exactly average
+## Adds randomness, so our data will look messy and realistic
+    totalFouls = rng.poisson(expectedFouls)     ## draw actual foul count from a Poisson with mean
+
+    rows.append({
+        "CrewID": crew,
+        "HomeTeam": homeTeam,
+        "AwayTeam": awayTeam,
+        "HomeAway": "home",                     ## row is written from home game's perspective
+        "isPlayoff": int(isPlayoff),
+        "TotalFouls": totalFouls,               ## countinous target
+    })
+
+df = pd.DataFrame(rows)
+```
+
+## Printing to Screen
+```{python}
+print('First 10 Simulated Games:')
+print(df.head(10).to_string(index=False))
+print()
+print('Summary of Total Fouls:')
+print(df["TotalFouls"].describe().round(2).to_string())
+print()
+print(f'Saved {len(df)} games to simulated_games.csv')
+
+df.to_csv('simulated_games.csv', index=False)
+```
+
+
+----------------------------------------------------------
+
+
+### Recovering Parameters From Simulated Data
+
+## Imports
+```{python}
+from sklearn.linear_model import BayesianRidge
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+```
+
+## Category Columns to Dummy Columns
+```{python}
+x = pd.get_dummies(
+    df[['CrewID', 'HomeTeam', 'AwayTeam', 'isPlayoff']],
+    columns=['CrewID', 'HomeTeam', 'AwayTeam'],
+)
+y = df['TotalFouls']
+```
+
+## Train Split
+```{python}
+x_train, x_test, y_train, y_test = train_test_split( x, y, test_size=0.2, random_state=42)
+```
+
+## Frequentist Model
+```{python}
+freqModel = LinearRegression()
+freqModel.fit(x_train, y_train)
+
+freqPreds = freqModel.predict(x_test)
+print('Frequentist (Linear Regression)')
+print(f'MSE: {mean_squared_error(y_test, freqPreds):.2f} (quadratic loss)')
+print(f' MAE: {mean_absolute_error(y_test, freqPreds):.2f} (avg miss, fouls/game)')
+```
+
+## Bayesian Model
+```{python}
+bayesModel = BayesianRidge()
+bayesModel.fit(x_train.astype(float), y_train)
+
+bayesPreds = bayesModel.predict(x_test.astype(float))
+print("Bayesian (BayesianRidge)")
+print(f' MSE: {mean_squared_error(y_test, bayesPreds):.2f}')
+print(f'MAE: {mean_absolute_error(y_test, bayesPreds):.2f}')
+```
+
+## Did We Recover Crew Tendencies
+Compare against true extra fouls we build above against the model's estimates
+```{python}
+cols = list(x.columns)
+compare = []
+for c in range(nCrews):
+    col = f'CrewID_{c}'
+    if col in cols:
+        idx = cols.index(col)
+        trueExtra = baseline * (np.exp(crewEffect[c]) -1) ## true effect in totalFouls
+        compare.append({
+            "Crew": c,
+            "TrueExtraFouls": round(trueExtra, 2),
+            "Frequentist": round(freqModel.coef_[idx], 2),
+            "Bayesian": round(bayesModel.coef_[idx], 2),
+        })
+
+compareDf = pd.DataFrame(compare)
+print(compareDf.to_string(index=False))
+```
+
+## How Close
+```{python}
+freqCorr = compareDf['TrueExtraFouls'].corr(compareDf['Frequentist'])
+bayesCorr = compareDf['TrueExtraFouls'].corr(compareDf['Bayesian'])
+print(f'Frequentist correlation with truth: {freqCorr:.2f}')
+print(f'Bayesian correlation with truth: {bayesCorr:.2f}')
+```
