@@ -1,6 +1,11 @@
 ---
 title: "NBA Foul Predictor"
-format: typst
+format: 
+    typst:
+        fontsize: 9pt
+        margin:
+            x: 1.5cm
+            y: 2cm
 ---
 
 ## Imports
@@ -10,8 +15,8 @@ import polars as pl
 from pyprojroot.here import here
 
 ## To fix format of PDF output
-pl.Config.set_tbl_cols(8)    ## show at most 8 columns (first 4 and last 4)
-pl.Config.set_tbl_rows(6)    ## show at most 6 rows
+pl.Config.set_tbl_cols(8);    ## show at most 8 columns
+pl.Config.set_tbl_rows(10);   ## show at most 10 rows
 ```
 
 ## Combining the Referee Stats Files Into One Table
@@ -139,7 +144,7 @@ crewStats = (gameRefs
 
 ## Attaching stats to games _TranslateTable
 games = games.join(crewStats, on = 'game_id', how = 'left')
-games
+games.shape
 ```
 
 ## Attaching Team Fouls File
@@ -162,6 +167,7 @@ games.filter(pl.col('home_team_fouls').is_null()).group_by('season').len()
 ### Each row is one game with game info (date, season, teams), crew stats (avg of the 3 referees), and home/away team foul avgs.
 
 # For Code Below, We Don't Want Pull Data Every Time - Already Ran It Once
+
 ## Pulling Each Season's Team Fouls
 ```{python}
 # import time
@@ -209,7 +215,7 @@ totalFouls = (gameLogs
 
 ## Attach to games
 games = games.join(totalFouls, on = 'game_id', how = 'left')
-games
+games.shape
 ```
 
 ## Checks
@@ -234,7 +240,7 @@ games = (games
     .drop_nulls(subset = 'total_fouls')
     .drop('n_teams')
 )
-games
+games.shape
 ```
 
 The 45 missing games are from 2019-20 (COVID Season) - league shut down
@@ -338,7 +344,7 @@ gamesClean.sort('total_fouls', descending=True).select('game_date', 'home_team_a
 gamesClean.select(
     'total_fouls', 'crew_fouls_per_game', 'crew_experience', 'crew_foul_diff',
     'crew_home_win_pct', 'home_team_fouls', 'away_team_fouls', 'overtime'
-).corr()
+).corr().select(pl.all().round(2))
 ```
 
 
