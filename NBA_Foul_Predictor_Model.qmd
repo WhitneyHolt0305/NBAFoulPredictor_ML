@@ -13,6 +13,7 @@ format:
 import numpy as np
 import polars as pl
 from pyprojroot.here import here
+from IPython.display import display ## just to remove an error
 
 ## To fix format of PDF output
 pl.Config.set_tbl_cols(8);    ## show at most 8 columns
