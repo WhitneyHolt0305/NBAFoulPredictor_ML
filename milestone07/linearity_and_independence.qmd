@@ -1,0 +1,29 @@
+
+```{python}
+import polars as pl
+
+# Load the three datasets
+games = pl.read_csv("Data/nba_games_ref_assignments.csv")
+refs = pl.read_csv("Data/nba_referee_stats_2025_2026.csv")
+team_fouls = pl.read_csv("Data/nba_team_personal_fouls_per_game.csv")
+
+# Check the column names
+print("GAMES")
+print(games.columns)
+
+print("\nREFEREES")
+print(refs.columns)
+
+print("\nTEAM FOULS")
+print(team_fouls.columns)
+```
+
+# Idea of what the linearity predictors could look like
+total_fouls ~ ref1_foul_rate + ref2_foul_rate + ref3_foul_rate
+              + home_team_foul_rate + away_team_foul_rate
+
+# need to at least temporarily merge the datasets to be able to plot a residuals vs. fitted values
+
+
+# Independence: Observations are independent of eachother 
+
