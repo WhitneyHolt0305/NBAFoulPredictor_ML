@@ -350,4 +350,54 @@ with pl.Config(tbl_cols = 10):
 
 -------------------------------------
 
+```{python}
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+import matplotlib.pyplot as plt
 
+predictors = [
+    "crew_fouls_per_game", "crew_experience", "crew_foul_diff",
+    "crew_home_win_pct", "home_team_fouls", "away_team_fouls",
+    "overtime", "late_season"
+]
+
+model_data = gamesClean.select(predictors + ["total_fouls"]).drop_nulls()
+X = model_data.select(predictors).to_numpy().astype(float)
+y = model_data["total_fouls"].to_numpy().astype(float)
+
+model = LinearRegression().fit(X, y)
+predicted = model.predict(X)
+residuals = y - predicted
+
+fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+
+# Constant variance: look for a similar vertical spread across predictions.
+axes[0].scatter(predicted, residuals, alpha=0.15)
+axes[0].axhline(0, color="red")
+axes[0].set(xlabel="Predicted fouls", ylabel="Residual",
+            title="Residuals vs. predicted")
+
+# Normality: inspect the residual distribution and Q–Q plot.
+axes[1].hist(residuals, bins=30)
+axes[1].set(xlabel="Residual", title="Residual histogram")
+stats.probplot(residuals, dist="norm", plot=axes[2])
+axes[2].set_title("Residual Q–Q plot")
+
+plt.tight_layout()
+plt.show()
+
+# Identifiability: rank should equal the number of model columns.
+design_matrix = np.column_stack([np.ones(len(X)), X])
+print("Matrix rank:", np.linalg.matrix_rank(design_matrix))
+print("Number of model columns:", design_matrix.shape[1])
+print("Condition number:", np.linalg.cond(design_matrix))
+```
+
+## Constant Variance
+The residuals stay centered around zero, with no clear funnel pattern across most predicted foul totals. The spread looks reasonably similar in the range where most games fall, though there are a few games at the highest predictions, so constant variance appears approximately reasonable. 
+
+## Normality 
+The residual histogram is roughly bell shaped, and most Q-Q points follow the reference line. The ends of the Q-Q plot bend away from the line, so the normality is approximate, with some departures in the tails. 
+
+## Identifiability
+The model matrix has full rank (9 out of 9 columns), so the coeffecients can be estimated separately. The condition number is about 1,419, which suggests some numerical sensitivity, although differences in predictor scales can also raise this number. Identifiability is satisfied in the strict full rank sense, but we should be cautious when interpreting individual coefficients.
