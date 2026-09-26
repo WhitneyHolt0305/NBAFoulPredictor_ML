@@ -1,6 +1,6 @@
 ---
 title: "NBA Foul Predictor"
-format: typst
+format: qmd
 ---
 
 ## Imports
