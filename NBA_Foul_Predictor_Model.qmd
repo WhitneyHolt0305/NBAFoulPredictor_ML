@@ -341,10 +341,21 @@ gamesClean.sort('total_fouls', descending=True).select('game_date', 'home_team_a
 
 ## Correlations
 ```{python}
-gamesClean.select(
-    'total_fouls', 'crew_fouls_per_game', 'crew_experience', 'crew_foul_diff',
-    'crew_home_win_pct', 'home_team_fouls', 'away_team_fouls', 'overtime'
-).corr().select(pl.all().round(2))
+corrTable = (gamesClean
+    .select('total_fouls', 'crew_fouls_per_game', 'crew_experience', 'crew_foul_diff',
+            'crew_home_win_pct', 'home_team_fouls', 'away_team_fouls', 'overtime')
+    .corr()
+    .select(pl.all().round(2))
+    ## Short names so the table fits on the page
+    .rename({
+        'total_fouls': 'total', 'crew_fouls_per_game': 'crew_fouls', 'crew_experience': 'crew_exp',
+        'crew_foul_diff': 'crew_diff', 'crew_home_win_pct': 'crew_hwp', 'home_team_fouls': 'home_fouls',
+        'away_team_fouls': 'away_fouls', 'overtime': 'OT',
+    })
+)
+
+## Add a label column so each row has a name too
+corrTable.insert_column(0, pl.Series('variable', corrTable.columns))
 ```
 
 
