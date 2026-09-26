@@ -8,10 +8,14 @@ format: typst
 import numpy as np
 import polars as pl
 from pyprojroot.here import here
+
+## To fix format of PDF output
+pl.Config.set_tbl_cols(8)    ## show at most 8 columns (first 4 and last 4)
+pl.Config.set_tbl_rows(6)    ## show at most 6 rows
 ```
 
 ## Combining the Referee Stats Files Into One Table
-```{pytfilehon}
+```{python}
 seasons = ['2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022', '2022-2023', '2023-2024', '2024-2025', '2025-2026']
 
 refList = []
@@ -94,7 +98,7 @@ games = (games
     ## Drop 4th referee column (empty during reg season)
     .drop(['official4', 'official4_code', 'official4_JNum'])
 )
-games
+games.shape
 ```
 
 ## Matching Referee Stats to Games File - Fixing Names
