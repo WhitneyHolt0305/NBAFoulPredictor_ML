@@ -7,7 +7,14 @@ authors = [
     { name = "Whitney Holt", email = "a02411667@aggies.usu.edu" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "nba-api>=1.11.4",
+    "plotnine>=0.15.8",
+    "polars>=1.44.2",
+    "pyarrow>=25.0.1",
+    "pyprojroot>=0.3.0",
+    "statsmodels>=0.15.0",
+]
 
 [project.scripts]
 nbafoulpredictor-ml = "nbafoulpredictor_ml:main"
