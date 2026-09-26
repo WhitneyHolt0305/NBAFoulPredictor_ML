@@ -1,6 +1,6 @@
 ---
 title: "NBA Foul Predictor"
-format: qmd
+format: typst
 ---
 
 ## Imports
@@ -11,7 +11,7 @@ from pyprojroot.here import here
 ```
 
 ## Combining the Referee Stats Files Into One Table
-```{python}
+```{pytfilehon}
 seasons = ['2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022', '2022-2023', '2023-2024', '2024-2025', '2025-2026']
 
 refList = []
