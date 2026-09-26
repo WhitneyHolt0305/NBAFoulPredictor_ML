@@ -19,6 +19,8 @@ pl.Config.set_tbl_cols(8);    ## show at most 8 columns
 pl.Config.set_tbl_rows(10);   ## show at most 10 rows
 ```
 
+# Data Cleaning and File Merging
+
 ## Combining the Referee Stats Files Into One Table
 ```{python}
 seasons = ['2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022', '2022-2023', '2023-2024', '2024-2025', '2025-2026']
@@ -59,7 +61,7 @@ refStats = refStats.with_columns(
 refStats
 ```
 
-## Combine CHEIF and CREW Rows
+## Combine CHIEF and CREW Rows
 ```{python}
 avgCols = ['home_win_pct', 'home_pt_diff', 'points_per_game', 'fouls_per_game', 'foul_pct_road', 'foul_pct_home', 'foul_diff']
 
@@ -147,25 +149,6 @@ games = games.join(crewStats, on = 'game_id', how = 'left')
 games.shape
 ```
 
-## Attaching Team Fouls File
-```{python}
-teamFouls = (pl.read_csv(here('Data/nba_team_personal_fouls_per_game_2017_2025.csv'))
-    .with_columns(pl.col('team').replace({'Okla City': 'Oklahoma City'}))
-)
-
-## Attaching twice (one for home and one for away)
-games = (games
-    .join(teamFouls.rename({'team': 'home_team', 'personal_fouls_per_game': 'home_team_fouls'}), on = ['season', 'home_team'], how = 'left')
-    .join(teamFouls.rename({'team': 'away_team', 'personal_fouls_per_game': 'away_team_fouls'}), on = ['season', 'away_team'], how = 'left')
-)
-games
-
-## Expecting that 1,230 games from 2025-26 will have blanks for two columns -- because team fouls file stops at 2024-25
-games.filter(pl.col('home_team_fouls').is_null()).group_by('season').len()
-```
-
-### Each row is one game with game info (date, season, teams), crew stats (avg of the 3 referees), and home/away team foul avgs.
-
 # For Code Below, We Don't Want Pull Data Every Time - Already Ran It Once
 
 ## Pulling Each Season's Team Fouls
@@ -245,6 +228,11 @@ games.shape
 
 The 45 missing games are from 2019-20 (COVID Season) - league shut down
 
+
+We first tried the team fouls file from NBAstuffer, but it stops at 2024-25, 
+so all 2025-26 games were blank. Instead, we calculated each team's season 
+foul average ourselves from the game logs, which covers every season.
+
 ## Team Season Avg From gameLogs
 ```{python}
 teamSeasonFouls = (gameLogs
@@ -260,10 +248,9 @@ teamSeasonFouls = (gameLogs
 teamSeasonFouls
 ```
 
-## Swap Out Old Columns For New
+## Attach Team Foul Averages (Home and Away)
 ```{python}
 games = (games
-    .drop(['home_team_fouls', 'away_team_fouls']) ## remove old ones (blanks)
     .join(teamSeasonFouls.rename({'TEAM_ABBREVIATION': 'home_team_abbr', 'team_fouls': 'home_team_fouls'}), on = ['season', 'home_team_abbr'], how = 'left')
     .join(teamSeasonFouls.rename({'TEAM_ABBREVIATION': 'away_team_abbr', 'team_fouls': 'away_team_fouls'}), on = ['season', 'away_team_abbr'], how = 'left')
 )
@@ -292,7 +279,7 @@ gamesClean
 ```
 
 
-# EDA
+# Exploratory Data Analysis (EDA)
 
 ## Histogram of Total Fouls
 ```{python}
@@ -355,7 +342,9 @@ corrTable = (gamesClean
 )
 
 ## Add a label column so each row has a name too
-corrTable.insert_column(0, pl.Series('variable', corrTable.columns))
+## Show all columns for just this table
+with pl.Config(tbl_cols = 10):
+    display(corrTable.insert_column(0, pl.Series('variable', corrTable.columns)))
 ```
 
 
