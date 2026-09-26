@@ -7,7 +7,11 @@ authors = [
     { name = "Whitney Holt", email = "a02411667@aggies.usu.edu" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "scikit-learn>=1.9.1",
+]
 
 [project.scripts]
 nbafoulpredictor-ml = "nbafoulpredictor_ml:main"
