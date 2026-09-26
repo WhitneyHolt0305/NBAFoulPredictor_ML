@@ -1,0 +1,343 @@
+---
+title: "NBA Foul Predictor"
+format: qmd
+---
+
+## Imports
+```{python}
+import numpy as np
+import polars as pl
+from pyprojroot.here import here
+```
+
+## Combining the Referee Stats Files Into One Table
+```{python}
+seasons = ['2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022', '2022-2023', '2023-2024', '2024-2025', '2025-2026']
+
+refList = []
+for s in seasons:
+    fileName = f'nba_referee_stats_{s}.csv'
+    if s == '2025-2026':
+        fileName = 'nba_referee_stats_2025_2026.csv' ## uses an underscore instead of dash between years
+    
+    refSeason = pl.read_csv(here(f'Data/{fileName}'))
+
+## find foul differential column
+    diffCol = [c for c in refSeason.columns if 'FOUL DIFFERENTIAL' in c][0]
+
+    refSeason = (refSeason
+        .rename({diffCol: 'foul_diff'})
+        .rename({'TYPE': 'ROLE'}, strict = False) ## older files say TYPE
+        .drop(['RANK', 'Unnamed: 13'], strict = False) ## empty columns
+        .with_columns(Season = pl.lit(s)) ## adds Season if missing
+        )
+    refList.append(refSeason)
+
+## Stack all seasons
+refStats = pl.concat(refList, how = 'diagonal')
+
+## Renaming columns
+refStats = refStats.rename({
+    'Season': 'season', 'REFEREE': 'referee', 'ROLE': 'role', 'GENDER': 'gender', 'EXPERIENCE (YEARS)': 'experience', 'GAMES OFFICIATED': 'games', 'HOME TEAM WIN%': 'home_win_pct', 'HOME TEAM POINTS DIFFERENTIAL': 'home_pt_diff', 'TOTAL POINTS PER GAME': 'points_per_game', 'CALLED FOULS PER GAME': 'fouls_per_game', 'FOUL% AGAINST ROAD TEAMS': 'foul_pct_road', 'FOUL% AGAINST HOME TEAMS': 'foul_pct_home',
+})
+
+## Fixing percents
+refStats = refStats.with_columns(
+    pl.when(pl.col(c) > 1).then(pl.col(c) / 100).otherwise(pl.col(c)).alias(c)
+    for c in ['foul_pct_road', 'foul_pct_home']
+)
+
+refStats
+```
+
+## Combine CHEIF and CREW Rows
+```{python}
+avgCols = ['home_win_pct', 'home_pt_diff', 'points_per_game', 'fouls_per_game', 'foul_pct_road', 'foul_pct_home', 'foul_diff']
+
+refStats = (refStats
+    .group_by(['season', 'referee']) ## referee rows for a season together
+    .agg(
+        experience = pl.col('experience').max(),
+        gender = pl.col('gender').first(),
+        games = pl.col('games').sum(), ## adding them
+        *[((pl.col(c) * pl.col('games')).sum() / pl.col('games').sum()).alias(c) for c in avgCols] ## weighted average for every column in avgCols
+    )
+    .sort(['season', 'referee'])
+)
+refStats
+```
+
+## Cleaning Games File
+```{python}
+games = pl.read_csv(here('Data/nba_games_ref_assignments.csv'))
+
+games = (games
+    ## Spliting season code (22025 --> game type 2, start year 2025)
+    .with_columns(
+        game_type = pl.col('season') // 10000,
+        start_year = pl.col('season') % 10000,
+    )
+    ## Make it look like the referee table above ('2025-2026')
+    .with_columns(
+        season = pl.col('start_year').cast(pl.String) + '-' + (pl.col('start_year') + 1).cast(pl.String)
+    )
+    ## Keep only regular season games (2017-18)
+    .filter(pl.col('game_type') == 2, pl.col('start_year') >= 2017)
+    ## Fix team names
+    .with_columns(
+        pl.col(['home_team', 'away_team']).str.replace('L.A.', 'LA', literal=True)
+    )
+    ## Remove games listed twice
+    .unique(subset = 'game_id', keep = 'first', maintain_order=True)
+    ## Remove games missing refrees
+    .drop_nulls(subset = ['official1', 'official2', 'official3'])
+    ## Drop 4th referee column (empty during reg season)
+    .drop(['official4', 'official4_code', 'official4_JNum'])
+)
+games
+```
+
+## Matching Referee Stats to Games File - Fixing Names
+```{python}
+## Referee Name fixed
+nameFix = {
+    'J.T. Orr': 'JT Orr',
+    'Sharae Mitchell': "Sha'Rae Mitchell", 'ShaRae Mitchell': "Sha'Rae Mitchell",
+    'Pat OConnell': "Pat O'Connell", 'PAT OConnell': "Pat O'Connell", "PAT O'Connell": "Pat O'Connell",
+    'Cheryl Flores': 'Che Flores',
+    'Jamahl Ralls': 'JD Ralls',
+    'CP Painter': 'Chelisa Painter',
+}
+refStats = refStats.with_columns(pl.col('referee').replace(nameFix))
+
+## One row per referee per game, attaching stats
+gameRefs = (games
+    .unpivot(index = ['game_id', 'season'], on = ['official1', 'official2', 'official3'],
+        variable_name = 'slot', value_name = 'referee')
+    .with_columns(pl.col('referee').replace(nameFix))
+    .join(refStats, on = ['season', 'referee'], how = 'left')
+)
+## Check - should be 0
+gameRefs['fouls_per_game'].null_count()
+```
+
+## Average 3 Referees and Attach Games
+```{python}
+crewStats = (gameRefs
+    .group_by('game_id')
+    .agg(
+        crew_fouls_per_game = pl.col('fouls_per_game').mean(),
+        crew_experience = pl.col('experience').mean(),
+        crew_foul_diff = pl.col('foul_diff').mean(),
+        crew_home_win_pct = pl.col('home_win_pct').mean(),
+    )
+)
+
+## Attaching stats to games _TranslateTable
+games = games.join(crewStats, on = 'game_id', how = 'left')
+games
+```
+
+## Attaching Team Fouls File
+```{python}
+teamFouls = (pl.read_csv(here('Data/nba_team_personal_fouls_per_game_2017_2025.csv'))
+    .with_columns(pl.col('team').replace({'Okla City': 'Oklahoma City'}))
+)
+
+## Attaching twice (one for home and one for away)
+games = (games
+    .join(teamFouls.rename({'team': 'home_team', 'personal_fouls_per_game': 'home_team_fouls'}), on = ['season', 'home_team'], how = 'left')
+    .join(teamFouls.rename({'team': 'away_team', 'personal_fouls_per_game': 'away_team_fouls'}), on = ['season', 'away_team'], how = 'left')
+)
+games
+
+## Expecting that 1,230 games from 2025-26 will have blanks for two columns -- because team fouls file stops at 2024-25
+games.filter(pl.col('home_team_fouls').is_null()).group_by('season').len()
+```
+
+### Each row is one game with game info (date, season, teams), crew stats (avg of the 3 referees), and home/away team foul avgs.
+
+# For Code Below, We Don't Want Pull Data Every Time - Already Ran It Once
+## Pulling Each Season's Team Fouls
+```{python}
+# import time
+# from nba_api.stats.endpoints import leaguegamelog
+
+# foulList = []
+# for year in range(2017, 2026):
+#     seasonCode = f'{year}-{str(year + 1)[-2:]}' ## nba_api wants '2017-18' not '2017-2018'
+
+#     log = leaguegamelog.LeagueGameLog(
+#         season = seasonCode,
+#         season_type_all_star= 'Regular Season',
+#         timeout = 60,
+#     )
+
+#     ## Turn result into polars table
+#     result = log.get_dict()['resultSets'][0]
+#     seasonLog = pl.DataFrame(result['rowSet'], schema = result['headers'], orient='row', infer_schema_length=None)
+#     foulList.append(seasonLog.select('GAME_ID', 'TEAM_ABBREVIATION', 'PF', 'MIN'))
+#     time.sleep(1) ## 1 second pause so we don't get blocked on NBA StopIteration
+
+# ## Stack all seasons and save
+# gameLogs = pl.concat(foulList)
+# gameLogs.write_csv(here('Data/nba_team_game_logs.csv'))
+# gameLogs
+```
+
+## Reading Commented Out Above and Saving
+```{python}
+gameLogs = pl.read_csv(here('Data/nba_team_game_logs.csv'))
+gameLogs['MIN'].value_counts().sort('MIN')
+```
+
+## Total Fouls Per Game, Then Join
+```{python}
+totalFouls = (gameLogs
+    .with_columns(game_id = pl.col('GAME_ID').cast(pl.Int64)) ## 0021700001 --> 21700001
+    .group_by('game_id')
+    .agg(
+        total_fouls = pl.col('PF').sum(),
+        n_teams = pl.len(), ## about 2 every game
+        game_minutes = pl.col('MIN').max(),
+    )
+)
+
+## Attach to games
+games = games.join(totalFouls, on = 'game_id', how = 'left')
+games
+```
+
+## Checks
+```{python}
+## Every game have exactly 2 teams
+totalFouls['n_teams'].value_counts()
+```
+
+```{python}
+## How many games didn't get total_fouls
+games['total_fouls'].null_count()
+```
+
+## 45 Missing Games (1/2 a Percent)
+```{python}
+games.filter(pl.col('total_fouls').is_null()).group_by('season').len()
+```
+
+## Drop Games, and n_teams Column (Only Needed For One Check)
+```{python}
+games = (games
+    .drop_nulls(subset = 'total_fouls')
+    .drop('n_teams')
+)
+games
+```
+
+The 45 missing games are from 2019-20 (COVID Season) - league shut down
+
+## Team Season Avg From gameLogs
+```{python}
+teamSeasonFouls = (gameLogs
+    ## Get season from game ID
+    .with_columns(start_year = 2000 + (pl.col('GAME_ID') // 100000) % 100)
+    .with_columns(
+        season = pl.col('start_year').cast(pl.String) + '-' + (pl.col('start_year') + 1).cast(pl.String)
+    )
+    ## Average fouls per game for each team in season
+    .group_by(['season', 'TEAM_ABBREVIATION'])
+    .agg(team_fouls = pl.col('PF').mean())
+)
+teamSeasonFouls
+```
+
+## Swap Out Old Columns For New
+```{python}
+games = (games
+    .drop(['home_team_fouls', 'away_team_fouls']) ## remove old ones (blanks)
+    .join(teamSeasonFouls.rename({'TEAM_ABBREVIATION': 'home_team_abbr', 'team_fouls': 'home_team_fouls'}), on = ['season', 'home_team_abbr'], how = 'left')
+    .join(teamSeasonFouls.rename({'TEAM_ABBREVIATION': 'away_team_abbr', 'team_fouls': 'away_team_fouls'}), on = ['season', 'away_team_abbr'], how = 'left')
+)
+games.select(pl.col('home_team_fouls', 'away_team_fouls').null_count())
+```
+
+All files combined into one table (games). There's 10,729 games, each with crew stats, team foul avgs, and total_fouls (target number).
+
+## Removing Unuseful Columns
+```{python}
+gamesClean = (games
+    .with_columns(game_date = pl.col('game_date').str.to_date('%m/%d/%Y')) ## Changing date format
+    ## Overtime periods and late season
+    .with_columns(
+        overtime = ((pl.col('game_minutes') - 240) /25).cast(pl.Int64),
+        days_left = (pl.col('game_date').max().over('season') - pl.col('game_date')).dt.total_days(),
+    )
+    .with_columns(late_season = pl.col('days_left') <= 14)
+    .select(
+        'game_id', 'game_date', 'season', 'home_team_abbr', 'away_team_abbr', 'official1', 'official2', 'official3', 'crew_fouls_per_game', 'crew_experience', 'crew_foul_diff', 'crew_home_win_pct', 'home_team_fouls', 'away_team_fouls', 'overtime', 'late_season', 'total_fouls' ## Only keeping useful columns
+    )
+    .sort('game_date')
+)
+gamesClean.write_parquet(here('Data/nba_games_clean.parquet'))
+gamesClean
+```
+
+
+# EDA
+
+## Histogram of Total Fouls
+```{python}
+from plotnine import *
+import pyarrow
+
+(ggplot(gamesClean, aes(x = 'total_fouls'))
+    + geom_histogram(binwidth=1)
+    + labs(x = 'Total fouls in game', y = 'Number of games', title = 'Distribution of Total Fouls Per Game')
+)
+```
+
+## Look at Unusual Games
+```{python}
+gamesClean['total_fouls'].describe()
+```
+
+## Games With Fewest and Most Fouls
+```{python}
+## Lowest
+gamesClean.sort('total_fouls').select('game_date', 'home_team_abbr', 'away_team_abbr', 'total_fouls').head(10)
+```
+
+```{python}
+## Highest
+gamesClean.sort('total_fouls', descending=True).select('game_date', 'home_team_abbr', 'away_team_abbr', 'total_fouls').head(10)
+```
+
+## Fouls Over Time
+```{python}
+(ggplot(gamesClean, aes(x = 'season', y = 'total_fouls'))
+    + geom_boxplot()
+    + labs(x = 'Season', y = 'Total fouls in game', title = 'Total Fouls Per Game by Season')
+    + theme(axis_text_x = element_text(rotation = 45, ha = 'right'))
+)
+```
+
+## Does The Crew Actually Matter
+```{python}
+(ggplot(gamesClean, aes(x = 'crew_fouls_per_game', y = 'total_fouls'))
+    + geom_point(alpha = 0.1)
+    + geom_smooth(method = 'lm', color = 'red')
+    + labs(x = 'Crew average fouls per game (season)', y = 'Total fouls in game', title = 'Crew Foul Tendency vs. Total Fouls')
+)
+```
+
+## Correlations
+```{python}
+gamesClean.select(
+    'total_fouls', 'crew_fouls_per_game', 'crew_experience', 'crew_foul_diff',
+    'crew_home_win_pct', 'home_team_fouls', 'away_team_fouls', 'overtime'
+).corr()
+```
+
+
+-------------------------------------
+
+

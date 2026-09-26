@@ -1,0 +1,241 @@
+season,team,personal_fouls_per_game
+2017-2018,Charlotte,17.2
+2017-2018,San Antonio,17.4
+2017-2018,Minnesota,18.2
+2017-2018,Detroit,18.4
+2017-2018,Denver,18.7
+2017-2018,Cleveland,18.8
+2017-2018,Indiana,19.1
+2017-2018,Chicago,19.2
+2017-2018,New Orleans,19.2
+2017-2018,Dallas,19.2
+2017-2018,Orlando,19.3
+2017-2018,Houston,19.4
+2017-2018,Portland,19.5
+2017-2018,Atlanta,19.6
+2017-2018,Golden State,19.6
+2017-2018,Utah,19.7
+2017-2018,Boston,19.9
+2017-2018,LA Clippers,20.0
+2017-2018,Sacramento,20.0
+2017-2018,Okla City,20.3
+2017-2018,New York,20.5
+2017-2018,Brooklyn,20.6
+2017-2018,Miami,20.6
+2017-2018,LA Lakers,21.2
+2017-2018,Washington,21.3
+2017-2018,Milwaukee,21.5
+2017-2018,Toronto,21.8
+2017-2018,Phoenix,22.0
+2017-2018,Philadelphia,22.2
+2017-2018,Memphis,23.2
+2018-2019,San Antonio,18.2
+2018-2019,Orlando,18.6
+2018-2019,Charlotte,18.9
+2018-2019,Indiana,19.5
+2018-2019,Milwaukee,19.9
+2018-2019,Cleveland,20.0
+2018-2019,Dallas,20.1
+2018-2019,Denver,20.2
+2018-2019,Chicago,20.3
+2018-2019,Minnesota,20.3
+2018-2019,Boston,20.4
+2018-2019,LA Lakers,20.7
+2018-2019,Washington,20.7
+2018-2019,Portland,20.7
+2018-2019,Miami,20.9
+2018-2019,New York,20.9
+2018-2019,Utah,21.1
+2018-2019,New Orleans,21.1
+2018-2019,Sacramento,21.4
+2018-2019,Toronto,21.4
+2018-2019,Philadelphia,21.4
+2018-2019,Brooklyn,21.6
+2018-2019,Golden State,21.8
+2018-2019,Houston,21.9
+2018-2019,Memphis,22.0
+2018-2019,Detroit,22.2
+2018-2019,Okla City,22.5
+2018-2019,LA Clippers,23.4
+2018-2019,Atlanta,23.6
+2018-2019,Phoenix,23.6
+2019-2020,Orlando,17.6
+2019-2020,Cleveland,18.3
+2019-2020,Charlotte,18.8
+2019-2020,Okla City,18.8
+2019-2020,Dallas,19.0
+2019-2020,Milwaukee,19.2
+2019-2020,San Antonio,19.2
+2019-2020,Indiana,19.6
+2019-2020,Detroit,19.7
+2019-2020,Utah,20.0
+2019-2020,Denver,20.0
+2019-2020,Golden State,20.1
+2019-2020,Miami,20.4
+2019-2020,LA Lakers,20.6
+2019-2020,Philadelphia,20.6
+2019-2020,Brooklyn,20.7
+2019-2020,Memphis,20.8
+2019-2020,New Orleans,21.0
+2019-2020,Boston,21.4
+2019-2020,Portland,21.4
+2019-2020,Minnesota,21.4
+2019-2020,Toronto,21.5
+2019-2020,Houston,21.6
+2019-2020,Chicago,21.8
+2019-2020,Sacramento,21.9
+2019-2020,LA Clippers,22.0
+2019-2020,Phoenix,22.1
+2019-2020,New York,22.2
+2019-2020,Washington,22.6
+2019-2020,Atlanta,23.1
+2020-2021,Orlando,17.2
+2020-2021,Milwaukee,17.4
+2020-2021,Charlotte,18.0
+2020-2021,New Orleans,18.0
+2020-2021,San Antonio,18.0
+2020-2021,Okla City,18.1
+2020-2021,Cleveland,18.2
+2020-2021,Memphis,18.9
+2020-2021,Chicago,18.9
+2020-2021,Utah,18.9
+2020-2021,Miami,19.0
+2020-2021,Phoenix,19.1
+2020-2021,LA Lakers,19.2
+2020-2021,Portland,19.2
+2020-2021,Denver,19.2
+2020-2021,Brooklyn,19.3
+2020-2021,LA Clippers,19.4
+2020-2021,Sacramento,19.4
+2020-2021,Dallas,19.5
+2020-2021,Houston,19.5
+2020-2021,Atlanta,19.7
+2020-2021,Indiana,20.2
+2020-2021,New York,20.4
+2020-2021,Boston,20.4
+2020-2021,Detroit,20.5
+2020-2021,Philadelphia,20.6
+2020-2021,Minnesota,20.9
+2020-2021,Toronto,21.2
+2020-2021,Golden State,21.2
+2020-2021,Washington,21.8
+2021-2022,Cleveland,17.5
+2021-2022,San Antonio,18.1
+2021-2022,Okla City,18.3
+2021-2022,Milwaukee,18.3
+2021-2022,Chicago,18.8
+2021-2022,LA Clippers,18.8
+2021-2022,Washington,18.8
+2021-2022,Sacramento,18.9
+2021-2022,Atlanta,18.9
+2021-2022,Boston,19.0
+2021-2022,Utah,19.1
+2021-2022,Philadelphia,19.5
+2021-2022,Orlando,19.7
+2021-2022,Toronto,19.8
+2021-2022,New Orleans,19.9
+2021-2022,Memphis,19.9
+2021-2022,Charlotte,19.9
+2021-2022,Dallas,19.9
+2021-2022,LA Lakers,20.2
+2021-2022,Phoenix,20.3
+2021-2022,Denver,20.3
+2021-2022,New York,20.4
+2021-2022,Indiana,20.4
+2021-2022,Brooklyn,20.6
+2021-2022,Houston,20.6
+2021-2022,Miami,20.7
+2021-2022,Portland,21.1
+2021-2022,Golden State,21.1
+2021-2022,Detroit,21.9
+2021-2022,Minnesota,22.2
+2022-2023,LA Lakers,17.8
+2022-2023,Milwaukee,18.1
+2022-2023,Boston,18.5
+2022-2023,Atlanta,18.7
+2022-2023,Denver,18.7
+2022-2023,Washington,18.8
+2022-2023,Miami,18.9
+2022-2023,Chicago,19.0
+2022-2023,Cleveland,19.1
+2022-2023,LA Clippers,19.7
+2022-2023,San Antonio,19.9
+2022-2023,Sacramento,19.9
+2022-2023,Toronto,20.0
+2022-2023,Portland,20.0
+2022-2023,Memphis,20.1
+2022-2023,Orlando,20.1
+2022-2023,New York,20.2
+2022-2023,Philadelphia,20.2
+2022-2023,Charlotte,20.3
+2022-2023,Houston,20.5
+2022-2023,Utah,20.5
+2022-2023,New Orleans,20.5
+2022-2023,Dallas,20.7
+2022-2023,Brooklyn,20.8
+2022-2023,Okla City,21.0
+2022-2023,Indiana,21.2
+2022-2023,Phoenix,21.3
+2022-2023,Minnesota,21.5
+2022-2023,Golden State,21.6
+2022-2023,Detroit,22.1
+2023-2024,LA Lakers,15.8
+2023-2024,Boston,16.1
+2023-2024,Miami,17.2
+2023-2024,San Antonio,17.2
+2023-2024,New York,17.7
+2023-2024,Cleveland,17.8
+2023-2024,Charlotte,18.0
+2023-2024,Denver,18.1
+2023-2024,Phoenix,18.2
+2023-2024,Toronto,18.4
+2023-2024,Dallas,18.4
+2023-2024,Brooklyn,18.5
+2023-2024,New Orleans,18.5
+2023-2024,Atlanta,18.5
+2023-2024,Utah,18.6
+2023-2024,Okla City,18.7
+2023-2024,Chicago,18.8
+2023-2024,LA Clippers,18.8
+2023-2024,Memphis,19.1
+2023-2024,Minnesota,19.2
+2023-2024,Milwaukee,19.2
+2023-2024,Golden State,19.5
+2023-2024,Sacramento,19.8
+2023-2024,Orlando,19.9
+2023-2024,Washington,20.0
+2023-2024,Portland,20.2
+2023-2024,Philadelphia,20.4
+2023-2024,Detroit,20.6
+2023-2024,Houston,20.8
+2023-2024,Indiana,21.4
+2024-2025,Miami,15.6
+2024-2025,Boston,16.3
+2024-2025,San Antonio,16.6
+2024-2025,LA Lakers,17.5
+2024-2025,Chicago,17.6
+2024-2025,Dallas,17.7
+2024-2025,New York,17.8
+2024-2025,Phoenix,17.9
+2024-2025,Denver,17.9
+2024-2025,Milwaukee,18.0
+2024-2025,Cleveland,18.2
+2024-2025,New Orleans,18.3
+2024-2025,LA Clippers,18.4
+2024-2025,Minnesota,18.7
+2024-2025,Charlotte,18.7
+2024-2025,Sacramento,18.9
+2024-2025,Houston,18.9
+2024-2025,Utah,18.9
+2024-2025,Philadelphia,19.0
+2024-2025,Portland,19.0
+2024-2025,Atlanta,19.0
+2024-2025,Golden State,19.5
+2024-2025,Indiana,19.7
+2024-2025,Washington,19.7
+2024-2025,Okla City,20.2
+2024-2025,Orlando,20.2
+2024-2025,Brooklyn,20.7
+2024-2025,Detroit,20.8
+2024-2025,Memphis,20.9
+2024-2025,Toronto,21.2
