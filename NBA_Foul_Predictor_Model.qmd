@@ -351,6 +351,7 @@ with pl.Config(tbl_cols = 10):
 
 -------------------------------------
 
+
 ```{python}
 from sklearn.linear_model import LinearRegression
 from scipy import stats
@@ -402,3 +403,71 @@ The residual histogram is roughly bell shaped, and most Q-Q points follow the re
 
 ## Identifiability
 The model matrix has full rank (9 out of 9 columns), so the coeffecients can be estimated separately. The condition number is about 1,419, which suggests some numerical sensitivity, although differences in predictor scales can also raise this number. Identifiability is satisfied in the strict full rank sense, but we should be cautious when interpreting individual coefficients.
+
+
+
+
+# Linearity: 
+
+lets run the code to show a scatterplot of residuals vs. fitted values
+```{python}
+import statsmodels.formula.api as smf
+
+# Fit another model (for teaching purposes)
+fit_02 = smf.ols("total_fouls ~ crew_fouls_per_game + crew_experience + crew_foul_diff + crew_home_win_pct + home_team_fouls + away_team_fouls + overtime + late_season",
+data = gamesClean
+).fit()
+
+# Save the residuals and fitted values
+gamesClean = (gamesClean
+.with_columns(residuals_02 = pl.Series(fit_02.resid))
+.with_columns(fitted_values_02 = pl.Series(fit_02.fittedvalues))
+)
+
+(ggplot(
+    gamesClean, 
+    aes(
+      x = 'residuals_02', 
+      y = 'fitted_values_02'
+    )
+  )
+  + geom_point(alpha = 0.25)
+  + geom_smooth(
+    method = 'lowess', 
+    color = 'red'
+  )
+  + labs(
+    title = 
+      'Linearity: Residuals vs. Fitted Values',
+    subtitle = 
+      'Look for a roughly horizontal line'
+  )
+)
+```
+
+Looking at the scatterplot of residuals vs. fitted values, we can see the line of best fit is almost completely horizontal. This tells us the mapping function from the predictors to the outcome is an additive, linear function of the parameters and satisfies the linearity assumption. 
+
+
+# Independence (Observations are independent of each other)
+
+In order for us to determine if our observations are independent of eachother, we will create a sequential residual graph 
+
+```{python}
+#sequential residual graph
+(ggplot(
+    gamesClean, 
+    aes(x = 'observation', y = 'residuals_02')
+  )
+  + geom_line(alpha = 0.5)
+  + geom_hline(yintercept = 0, color = 'red')
+  + labs(
+    title = 
+      'Independence: Sequential Residuals',
+    subtitle = 
+      'Look for a trend in mean or variance'
+  )
+)
+```
+
+As we can see from the Sequential Residuals plot, there is no clear order or trends we can see.  It seems to be completely random, which tells me that our observations are independent of eachother and the indpendence assumption is validated. 
+
