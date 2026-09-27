@@ -407,7 +407,7 @@ The model matrix has full rank (9 out of 9 columns), so the coeffecients can be 
 
 
 
-# Linearity: 
+# Linearity (The mapping function from the predictors to the outcome is an additive, linear function of the parameters)
 
 lets run the code to show a scatterplot of residuals vs. fitted values
 ```{python}
