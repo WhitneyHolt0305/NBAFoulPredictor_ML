@@ -561,3 +561,6 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 
 # Milestone 09
 
+To Do:
+update project's param estimate interpretations using interval estimates and statistically significance
+run bayesian model and compare credible and confidence intervals
