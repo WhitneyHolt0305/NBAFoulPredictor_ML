@@ -506,7 +506,6 @@ X_train.shape
 ```
 
 # Ordinary Least Squares (OLS) Model
-
 ```{python}
 # Add constant for intercept
 X_train = sm.add_constant(X_train)
