@@ -452,10 +452,7 @@ Looking at the scatterplot of residuals vs. fitted values, we can see the line o
 
 In order for us to determine if our observations are independent of eachother, we will create a sequential residual graph 
 
-```{python}
-if "observation" not in gamesClean.columns:
-    gamesClean = gamesClean.with_row_index("observation", offset=1)
-```
+
 
 ```{python}
 #sequential residual graph
@@ -511,15 +508,12 @@ X_train.shape
 ```
 
 # Ordinary Least Squares (OLS) Model
+
 ```{python}
 # Add constant for intercept
-X_train = sm.add_constant(X_train.to_pandas())
-
+X_train = sm.add_constant(X_train)
+2
 # Fit a model
-fit_05 = sm.OLS(y_train.to_pandas(), X_train).fit()
+fit_05 = sm.OLS(y_train, X_train).fit()
 fit_05.summary()
 ```
-
-# Parameter estimates and how we interpret them
-
-First, it's important to note a couple things. We are using total_fouls 
