@@ -537,7 +537,9 @@ Team Variables:
 * For away_team_fouls it has the same idea that if they foul 1 more time per game, that the game will have 1.2 more total fouls.
 
 Game Context:
-* With the overtime variable, we can interpret that each overtime period will add about 4.8 fouls. This makes sense because there is extra play time
-* If it's considered
+* With the overtime variable, we can interpret that each overtime period will add about 4.8 total fouls. This makes sense because there is extra play time
+* If it's considered a late season game (games in the last two weeks), they will have 1.6 fewer total fouls compared to other games.
 
-Season Dummies (Reference Level - 2017-18):
+Season Dummies (Reference Level | 2017-18):
+For season_2018_2019, when we compare it to 2017-18, the games during 2018-19 had about 5.5 fewer fouls, holding all other variables fixed.
+
