@@ -554,3 +554,10 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 * `season_2023_2024` (6.7328), compared to 2017-18, had about 6.7 more fouls, holding all other variables fixed.
 * `season_2024_2025` (7.571), compared to 2017-18, had about 7.6 more fouls, holding all other variables fixed.
 * `season_2025_2026` (0.487), compared to 2017-18, has about 0.49 more fouls, holding all other variables fixed.
+
+
+-----------------------------------------
+
+
+# Milestone 09
+
