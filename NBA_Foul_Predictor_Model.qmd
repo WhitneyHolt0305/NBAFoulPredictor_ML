@@ -525,15 +525,17 @@ fit_05.summary()
 First, it's important to note a couple of things. We are using total_fouls as our dependent variable in this model. Another important number is the R^2 value, which is 0.265. This tells us that the predictors in the model explain about 26.5% of the variation in total_fouls in the training data.
 
 Crew Variables:
-Moving on to our coefficients, our first one is crew_fouls_per_game at 2.592.  The interpretation of that for every one extra foul the crew calls in a given game, there are 2.592 more total_fouls in the game, holding all other variables fixed.
+Moving on to our coefficients, our first one is crew_fouls_per_game at 2.592.  The interpretation of that for every one extra foul the crew calls in a given game, there are about 2.6 more total_fouls in the game, holding all other variables fixed.
 
 Crew_experience, crew_foul_diff, and crew_home_win_pct all have coefficient values of 0.0044, 0.0912, and 0.2242, respectively. This numbers are telling us that none of these 3 variables have a big influence on the total fouls called in a game.
 
 Team Variables:
-
+* For home_team_fouls, this means that if a home team fouls 1 more time per game, that the game has about 1.2 more total fouls.
+* For away_team_fouls it has the same idea that if they foul 1 more time per game, that the game will have 1.2 more total fouls.
 
 Game Context:
-
+* With the overtime variable, we can interpret that each overtime period will add about 4.8 fouls. This makes sense because there is extra play time
+* If it's considered
 
 Season Dummies (Reference Level - 2017-18):
 
