@@ -524,6 +524,9 @@ fit_05.summary()
 
 First, it's important to note a couple of things. We are using total_fouls as our dependent variable in this model. Another important number is the R^2 value, which is 0.265. This tells us that the predictors in the model explain about 26.5% of the variation in total_fouls in the training data.
 
+Intercept:
+This predicts for us that when every predictor is 0, that there will be a total fouls of 0. However, this is very unlikely, so we won't need to interpret it.
+
 Crew Variables:
 Moving on to our coefficients, our first one is crew_fouls_per_game at 2.592.  The interpretation of that for every one extra foul the crew calls in a given game, there are about 2.6 more total_fouls in the game, holding all other variables fixed.
 
@@ -538,6 +541,3 @@ Game Context:
 * If it's considered
 
 Season Dummies (Reference Level - 2017-18):
-
-
-Intercept:
