@@ -471,3 +471,11 @@ In order for us to determine if our observations are independent of eachother, w
 
 As we can see from the Sequential Residuals plot, there is no clear order or trends we can see.  It seems to be completely random, which tells me that our observations are independent of eachother and the indpendence assumption is validated. 
 
+
+-------------------------------------------------------
+
+
+# Milestone 05
+
+
+

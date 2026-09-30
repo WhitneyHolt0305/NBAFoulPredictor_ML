@@ -321,6 +321,7 @@ dependencies = [
     { name = "pyprojroot" },
     { name = "scikit-learn" },
     { name = "scipy" },
+    { name = "statsmodels" },
 ]
 
 [package.metadata]
@@ -334,6 +335,7 @@ requires-dist = [
     { name = "pyprojroot", specifier = ">=0.3.0" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "scipy", specifier = ">=1.18.1" },
+    { name = "statsmodels", specifier = ">=0.15.0" },
 ]
 
 [[package]]
