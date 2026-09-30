@@ -514,3 +514,7 @@ X_train = sm.add_constant(X_train)
 fit_05 = sm.OLS(y_train, X_train).fit()
 fit_05.summary()
 ```
+
+# Parameter estimates and how we interpret them
+
+First, it's important to note a couple things. We are using total_fouls 
