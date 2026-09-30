@@ -511,12 +511,15 @@ X_train.shape
 ```
 
 # Ordinary Least Squares (OLS) Model
-
 ```{python}
 # Add constant for intercept
-X_train = sm.add_constant(X_train)
-2
+X_train = sm.add_constant(X_train.to_pandas())
+
 # Fit a model
-fit_05 = sm.OLS(y_train, X_train).fit()
+fit_05 = sm.OLS(y_train.to_pandas(), X_train).fit()
 fit_05.summary()
 ```
+
+# Parameter estimates and how we interpret them
+
+First, it's important to note a couple things. We are using total_fouls 
