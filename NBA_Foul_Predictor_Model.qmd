@@ -594,6 +594,8 @@ az.summary(ba_fit, ci_kind = 'hdi', ci_prob = 0.95)
 ## Parameter estimates and how we interpret them
 First, it's important to note a couple of things. We are using total_fouls as our dependent variable in this model. Another important number is the R^2 value, which is 0.265. This tells us that the predictors in the model explain about 26.5% of the variation in total_fouls in the training data. 
 
+
+
 **Intercept (-111.558):**
 
 * This is the predicted total fouls when every predictor is 0. However, this is very unlikely. so we won't interpret it.
@@ -605,13 +607,16 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 
 **Team Variables:**
 
-* `home_team_fouls` (1.211), this means that if a home team fouls 1 more time per game, that the game has about 1.2 more total fouls.
-* `away_team_fouls` (1.185), has the same idea, that if they foul 1 more time per game, that the game will have 1.2 more total fouls.
+* `home_team_fouls` (1.211), this means that if a home team fouls 1 more time per game, that the game has about 1.2 more total fouls. The Bayesian 95% credible interval is approximately [1.1, 1.3], meaning that, given the model and prior assumptions, there is a 95% posterior probability that the home_team_fouls coefficient falls between 1.1 and 1.3. The frequentist 95% confidence interval for the coefficient is [1.107, 1.314], meaning that the estimated increase in total fouls associated with home_team_fouls is between 1.107 and 1.314.
+
+* `away_team_fouls` (1.185), has the same idea, that if they foul 1 more time per game, that the game will have 1.2 more total fouls. The Bayesian 95% credible interval is approximately [1.1, 1.3], meaning that, given the model and prior assumptions, there is a 95% posterior probability that the away_team_fouls coefficient falls between 1.1 and 1.3.
 
 **Game Context:**
 
-* `overtime` (4.849), each overtime period will add about 4.8 total fouls. This makes sense because there is extra play time
-* `late_season` (-1.562), games in the last two weeks, they will have 1.6 fewer total fouls compared to other games.
+* `overtime` (4.849), each overtime period will add about 4.8 total fouls. This makes sense because there is extra play time.  A frequentist confidence interval would say that we are 95% confident the overtime predictor increases total_fouls between 4.375 and 5.324, holding all other variables fixed.  A Bayesian credible interval would say that with a probability 0.95, the overtime predictor increases total_fouls between 4.4 and 5.3, holding all other variables fixed. Our interval estimate does not inlude zero, we can say that our predictor is statistically significant.
+
+
+* `late_season` (-1.562), games in the last two weeks, they will have 1.6 fewer total fouls compared to other games. We are 95% confident the late_season predictor increases total_fouls between -1.985 and -1.140, holding all other variables fixed.  Our interval estimate does not inlude zero, we can say that our predictor is statistically significant.
 
 **Season Dummies (Reference Level | 2017-18):**
 
