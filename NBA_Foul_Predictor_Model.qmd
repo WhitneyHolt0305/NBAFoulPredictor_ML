@@ -279,7 +279,6 @@ gamesClean.write_parquet(here('Data/nba_games_clean.parquet'))
 gamesClean
 ```
 
-
 # Exploratory Data Analysis (EDA)
 
 ## Histogram of Total Fouls
@@ -455,6 +454,9 @@ In order for us to determine if our observations are independent of eachother, w
 
 
 ```{python}
+# Add sequential observation numbers
+gamesClean = gamesClean.with_row_index("observation")
+
 #sequential residual graph
 (ggplot(
     gamesClean, 
@@ -564,3 +566,69 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 To Do:
 update project's param estimate interpretations using interval estimates and statistically significance
 run bayesian model and compare credible and confidence intervals
+
+# Running Bayesian model
+
+
+```{python}
+import bambi as bmb
+import arviz as az
+import pandas as pd
+
+# Specify predictors
+predictors = [
+  'crew_fouls_per_game', 'crew_experience', 'crew_foul_diff', 'crew_home_win_pct', 'home_team_fouls', 'away_team_fouls', 
+  'overtime', 'late_season', 'season_2018_2019', 'season_2019_2020', 'season_2020_2021', 'season_2021_2022',
+  'season_2022_2023', 'season_2023_2024', 'season_2024_2025', 'season_2025_2026'
+]
+
+# combine 2 training sets
+nba_train = pd.concat(
+    [
+        y_train.to_pandas() if isinstance(y_train, pl.DataFrame) else y_train,
+        X_train.drop(columns='const', errors='ignore')
+            if isinstance(X_train, pd.DataFrame)
+            else X_train.to_pandas()
+    ],
+    axis=1
+)
+
+# Bayesian linear regression model
+ba_model = bmb.Model(
+  'total_fouls ~ ' + ' + '.join(predictors), 
+  data = nba_train
+)
+# Specify priors
+priors_dict = {
+  'Intercept': bmb.Prior('Uniform', lower = -100, upper = 100),
+  **{term: bmb.Prior('Uniform', lower = -100, upper = 100) for term in 
+predictors},
+  'sigma': bmb.Prior('Exponential', lam = 1)
+}
+# setting the priors
+ba_model.set_priors(priors = priors_dict)
+
+# OLS confidence intervals and p-values
+confidence_intervals = fit_05.conf_int()
+confidence_intervals.columns = ['CI Lower', 'CI Upper']
+
+ols_results = pd.concat(
+    [
+        fit_05.params.rename('Estimate'),
+        confidence_intervals,
+        fit_05.pvalues.rename('p-value')
+    ],
+    axis=1
+)
+print(ols_results.round(3))
+
+# Fit a Bayesian linear regression
+ba_fit = ba_model.fit()
+
+# fit summary and intervals 
+fit_05.summary()
+az.summary(ba_fit, ci_kind = 'hdi', ci_prob = 0.95)
+```
+
+
+# Interpretations 
