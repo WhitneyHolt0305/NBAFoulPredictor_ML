@@ -523,44 +523,6 @@ fit_05 = sm.OLS(y_train.to_pandas(), X_train).fit()
 fit_05.summary()
 ```
 
-
-## Parameter estimates and how we interpret them
-First, it's important to note a couple of things. We are using total_fouls as our dependent variable in this model. Another important number is the R^2 value, which is 0.265. This tells us that the predictors in the model explain about 26.5% of the variation in total_fouls in the training data.
-
-**Intercept (-111.558):**
-
-* This is the predicted total fouls when every predictor is 0. However, this is very unlikely. so we won't interpret it.
-
-**Crew Variables:**
-
-* `crew_fouls_per_game` (2.592), for every 1 extra foul the crew usually calls per game (their season average), there are about 2.6 more total fouls in the game, holding all other variables fixed.
-* `crew_experience` (0.004), `crew_foul_diff` (0.091), and `crew_home_win_pct` (0.224) all have coefficient values close to 0. Telling us that none of these 3 variables have a big influence on the total fouls called in a game.
-
-**Team Variables:**
-
-* `home_team_fouls` (1.211), this means that if a home team fouls 1 more time per game, that the game has about 1.2 more total fouls.
-* `away_team_fouls` (1.185), has the same idea, that if they foul 1 more time per game, that the game will have 1.2 more total fouls.
-
-**Game Context:**
-
-* `overtime` (4.849), each overtime period will add about 4.8 total fouls. This makes sense because there is extra play time
-* `late_season` (-1.562), games in the last two weeks, they will have 1.6 fewer total fouls compared to other games.
-
-**Season Dummies (Reference Level | 2017-18):**
-
-* `season_2018_2019` (-5.521), compare it to 2017-18, had about 5.5 fewer fouls, holding all other variables fixed.
-* `season_2019_2020` (-4.745), compared to 2017-18, had about 4.7 fewer fouls, holding all other variables fixed.
-* `season_2020_2021` (3.642), compared to 2017-18, had about 3.6 more fouls, holding all other variables fixed.
-* `season_2021_2022` (1.707), compared to 2017-18, had about 1.7 more fouls, holding all other variables fixed.
-* `season_2022_2023` (-0.243), compared to 2017-18, had aobut 0.24 fewer fouls, holding all other variables fixed.
-* `season_2023_2024` (6.7328), compared to 2017-18, had about 6.7 more fouls, holding all other variables fixed.
-* `season_2024_2025` (7.571), compared to 2017-18, had about 7.6 more fouls, holding all other variables fixed.
-* `season_2025_2026` (0.487), compared to 2017-18, has about 0.49 more fouls, holding all other variables fixed.
-
-
------------------------------------------
-
-
 # Milestone 09
 
 To Do:
@@ -568,7 +530,6 @@ update project's param estimate interpretations using interval estimates and sta
 run bayesian model and compare credible and confidence intervals
 
 # Running Bayesian model
-
 
 ```{python}
 import bambi as bmb
@@ -630,5 +591,36 @@ fit_05.summary()
 az.summary(ba_fit, ci_kind = 'hdi', ci_prob = 0.95)
 ```
 
+## Parameter estimates and how we interpret them
+First, it's important to note a couple of things. We are using total_fouls as our dependent variable in this model. Another important number is the R^2 value, which is 0.265. This tells us that the predictors in the model explain about 26.5% of the variation in total_fouls in the training data. 
 
-# Interpretations 
+**Intercept (-111.558):**
+
+* This is the predicted total fouls when every predictor is 0. However, this is very unlikely. so we won't interpret it.
+
+**Crew Variables:**
+
+* `crew_fouls_per_game` (2.592), for every 1 extra foul the crew usually calls per game (their season average), there are about 2.6 more total fouls in the game, holding all other variables fixed.
+* `crew_experience` (0.004), `crew_foul_diff` (0.091), and `crew_home_win_pct` (0.224) all have coefficient values close to 0. Telling us that none of these 3 variables have a big influence on the total fouls called in a game.
+
+**Team Variables:**
+
+* `home_team_fouls` (1.211), this means that if a home team fouls 1 more time per game, that the game has about 1.2 more total fouls.
+* `away_team_fouls` (1.185), has the same idea, that if they foul 1 more time per game, that the game will have 1.2 more total fouls.
+
+**Game Context:**
+
+* `overtime` (4.849), each overtime period will add about 4.8 total fouls. This makes sense because there is extra play time
+* `late_season` (-1.562), games in the last two weeks, they will have 1.6 fewer total fouls compared to other games.
+
+**Season Dummies (Reference Level | 2017-18):**
+
+* `season_2018_2019` (-5.521), compare it to 2017-18, had about 5.5 fewer fouls, holding all other variables fixed.
+* `season_2019_2020` (-4.745), compared to 2017-18, had about 4.7 fewer fouls, holding all other variables fixed.
+* `season_2020_2021` (3.642), compared to 2017-18, had about 3.6 more fouls, holding all other variables fixed.
+* `season_2021_2022` (1.707), compared to 2017-18, had about 1.7 more fouls, holding all other variables fixed.
+* `season_2022_2023` (-0.243), compared to 2017-18, had aobut 0.24 fewer fouls, holding all other variables fixed.
+* `season_2023_2024` (6.7328), compared to 2017-18, had about 6.7 more fouls, holding all other variables fixed.
+* `season_2024_2025` (7.571), compared to 2017-18, had about 7.6 more fouls, holding all other variables fixed.
+* `season_2025_2026` (0.487), compared to 2017-18, has about 0.49 more fouls, holding all other variables fixed.
+
