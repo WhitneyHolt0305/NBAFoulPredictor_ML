@@ -660,12 +660,20 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 
 **Season Dummies (Reference Level | 2017-18):**
 
-* `season_2018_2019` (-5.521), compare it to 2017-18, had about 5.5 fewer fouls, holding all other variables fixed.
-* `season_2019_2020` (-4.745), compared to 2017-18, had about 4.7 fewer fouls, holding all other variables fixed.
-* `season_2020_2021` (3.642), compared to 2017-18, had about 3.6 more fouls, holding all other variables fixed.
-* `season_2021_2022` (1.707), compared to 2017-18, had about 1.7 more fouls, holding all other variables fixed.
-* `season_2022_2023` (-0.243), compared to 2017-18, had aobut 0.24 fewer fouls, holding all other variables fixed.
-* `season_2023_2024` (6.7328), compared to 2017-18, had about 6.7 more fouls, holding all other variables fixed.
-* `season_2024_2025` (7.571), compared to 2017-18, had about 7.6 more fouls, holding all other variables fixed.
-* `season_2025_2026` (0.487), compared to 2017-18, has about 0.49 more fouls, holding all other variables fixed.
+* `season_2018_2019` (-5.521), Compared with 2017–18, about 5.5 fewer predicted fouls per game, holding all other variables fixed. The 95% confidence interval is −6.16 to −4.89. It excludes zero, so the difference is statistically significant (p < 0.001).
 
+* `season_2019_2020` (-4.745), About 4.7 fewer predicted fouls per game. The interval is −5.38 to −4.11, so the difference is statistically significant (p < 0.001).
+
+* `season_2020_2021` (3.642), About 3.6 more predicted fouls per game. The interval is 3.04 to 4.24, so the difference is statistically significant (p < 0.001).
+
+* `season_2021_2022` (1.707), About 1.7 more predicted fouls per game. The interval is 1.15 to 2.27, so the difference is statistically significant (p < 0.001).
+
+* `season_2022_2023` (-0.243), About 0.24 fewer predicted fouls per game. However, the interval is −0.77 to 0.28 and includes zero, so there is no clear evidence of a difference (p = 0.364).
+
+* `season_2023_2024` (6.7328), About 6.7 more predicted fouls per game. The interval is 6.05 to 7.42, so the difference is statistically significant (p < 0.001).
+
+* `season_2024_2025` (7.571), About 7.6 more predicted fouls per game. The interval is 6.85 to 8.29, so the difference is statistically significant (p < 0.001).
+
+* `season_2025_2026` (0.487), About 0.49 more predicted fouls per game. However, the interval is −0.05 to 1.02 and includes zero, so there is no clear evidence of a difference (p = 0.073).
+
+The Bayesian estimates and 95% credible intervals were very similar to the OLS results. Both methods showed the same direction of association for the seasons whose intervals excluded zero. Both included zero for 2022–23 and 2025–26, showing uncertainty about whether those seasons differed from 2017–18. A credible interval describes the parameter’s probability given the data, model, and priors; a confidence interval comes from a procedure that captures the true parameter in 95% of repeated samples.
