@@ -520,6 +520,8 @@ fit_05 = sm.OLS(y_train.to_pandas(), X_train).fit()
 fit_05.summary()
 ```
 
+Our parameter estimate interpretations are combined with the interval estimates in the Milestone 09 section below.
+
 
 ----------------------------------------------------------
 
@@ -635,7 +637,7 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 
 * `overtime` (4.849), each overtime period will add about 4.8 total fouls. This makes sense because there is extra play time.  A frequentist confidence interval would say that we are 95% confident the overtime predictor increases total_fouls between 4.375 and 5.324, holding all other variables fixed.  A Bayesian credible interval would say that with a probability 0.95, the overtime predictor increases total_fouls between 4.4 and 5.3, holding all other variables fixed. Our interval estimate does not inlude zero, we can say that our predictor is statistically significant.
 
-* `late_season` (-1.562), games in the last two weeks, they will have 1.6 fewer total fouls compared to other games. We are 95% confident the late_season predictor decreases total_fouls between 1.985 and 1.140, holding all other variables fixed. Our interval estimate does not inlude zero, we can say that our predictor is statistically significant.
+* `late_season` (-1.562), games in the last two weeks, they will have 1.6 fewer total fouls compared to other games. We are 95% confident the late_season predictor decreases total_fouls between 1.140 and 1.985, holding all other variables fixed. Our interval estimate does not inlude zero, we can say that our predictor is statistically significant.
 
 **Season Dummies (Reference Level | 2017-18):**
 
