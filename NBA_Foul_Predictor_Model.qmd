@@ -403,10 +403,7 @@ The residual histogram is roughly bell shaped, and most Q-Q points follow the re
 ## Identifiability
 The model matrix has full rank (9 out of 9 columns), so the coeffecients can be estimated separately. The condition number is about 1,419, which suggests some numerical sensitivity, although differences in predictor scales can also raise this number. Identifiability is satisfied in the strict full rank sense, but we should be cautious when interpreting individual coefficients.
 
-
-
-
-# Linearity (The mapping function from the predictors to the outcome is an additive, linear function of the parameters)
+## Linearity (The mapping function from the predictors to the outcome is an additive, linear function of the parameters)
 
 lets run the code to show a scatterplot of residuals vs. fitted values
 ```{python}
@@ -525,8 +522,6 @@ fit_05.summary()
 
 ## Parameter estimates and how we interpret them
 First, it's important to note a couple of things. We are using total_fouls as our dependent variable in this model. Another important number is the R^2 value, which is 0.265. This tells us that the predictors in the model explain about 26.5% of the variation in total_fouls in the training data. 
-
-
 
 **Intercept (-111.558):**
 
