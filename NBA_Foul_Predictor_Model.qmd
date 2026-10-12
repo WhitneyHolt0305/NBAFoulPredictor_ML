@@ -677,3 +677,136 @@ First, it's important to note a couple of things. We are using total_fouls as ou
 * `season_2025_2026` (0.487), About 0.49 more predicted fouls per game. However, the interval is −0.05 to 1.02 and includes zero, so there is no clear evidence of a difference (p = 0.073).
 
 The Bayesian estimates and 95% credible intervals were very similar to the OLS results. Both methods showed the same direction of association for the seasons whose intervals excluded zero. Both included zero for 2022–23 and 2025–26, showing uncertainty about whether those seasons differed from 2017–18. A credible interval describes the parameter’s probability given the data, model, and priors; a confidence interval comes from a procedure that captures the true parameter in 95% of repeated samples.
+
+```{python}
+## Plain-English names for the slides
+niceNames = {
+  'crew_fouls_per_game': 'Crew: usual fouls called',
+  'home_team_fouls': 'Home team: usual fouls',
+  'away_team_fouls': 'Away team: usual fouls',
+  'overtime': 'Each overtime period',
+  'late_season': 'Last 2 weeks of season',
+  'crew_experience': 'Crew: years of experience',
+  'crew_foul_diff': 'Crew: road-team foul bias',
+  'crew_home_win_pct': 'Crew: home-team win %',
+}
+plotOrder = list(niceNames.values())[::-1]  ## top of chart = first in list
+```
+
+```{python}
+ciTable = fit_05.conf_int()
+olsDf = pl.DataFrame({
+  'term': fit_05.params.index.tolist(),
+  'coef': fit_05.params.tolist(),
+  'low': ciTable[0].tolist(),
+  'high': ciTable[1].tolist(),
+})
+
+mainDf = (olsDf
+  .filter(pl.col('term').is_in(list(niceNames.keys())))
+  .with_columns(label = pl.col('term').replace(niceNames))
+)
+
+(ggplot(mainDf, aes(x = 'coef', y = 'label'))
+  + geom_point(size = 3)
+  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2)
+  + geom_vline(xintercept = 0, color = 'red', linetype = '--')
+  + scale_y_discrete(limits = plotOrder)
+  + labs(x = 'Change in total fouls (95% interval)', y = '',
+         title = 'Referee crews matter more than teams')
+)
+```
+
+```{python}
+baSum = az.summary(ba_fit, ci_kind = 'hdi', ci_prob = 0.95)
+## arviz columns: mean, sd, lower, upper, ...
+bayesDf = pl.DataFrame({
+  'term': baSum.index.tolist(),
+  'coef': baSum.iloc[:, 0].tolist(),
+  'low': baSum.iloc[:, 2].tolist(),
+  'high': baSum.iloc[:, 3].tolist(),
+})
+
+bothDf = (pl.concat([
+    olsDf.with_columns(method = pl.lit('OLS (confidence interval)')),
+    bayesDf.with_columns(method = pl.lit('Bayesian (credible interval)')),
+  ])
+  .filter(pl.col('term').is_in(list(niceNames.keys())))
+  .with_columns(label = pl.col('term').replace(niceNames))
+)
+
+(ggplot(bothDf, aes(x = 'coef', y = 'label'))
+  + geom_point(size = 3)
+  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2)
+  + geom_vline(xintercept = 0, color = 'red', linetype = '--')
+  + facet_wrap('~method')
+  + scale_y_discrete(limits = plotOrder)
+  + labs(x = 'Change in total fouls (95% interval)', y = '',
+         title = 'Two methods, same answer')
+)
+
+```
+
+```{python}
+seasonDf = (olsDf
+  .filter(pl.col('term').str.starts_with('season_'))
+  ## season_2018_2019 --> 2018-19
+  .with_columns(label = pl.col('term').str.slice(7, 4) + '-' + pl.col('term').str.slice(14, 2))
+)
+
+(ggplot(seasonDf, aes(x = 'coef', y = 'label'))
+  + geom_point(size = 3)
+  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2)
+  + geom_vline(xintercept = 0, color = 'red', linetype = '--')
+  + labs(x = 'Fouls per game compared with 2017-18', y = 'Season',
+         title = 'Foul levels change from season to season')
+)
+```
+
+```{python}
+crewGroups = (gamesClean
+  .with_columns(
+    crew_group = pl.col('crew_fouls_per_game')
+      .qcut(3, labels = ['Low-foul crews', 'Middle crews', 'High-foul crews'])
+      .cast(pl.String)
+  )
+  .group_by('crew_group')
+  .agg(avg_fouls = pl.col('total_fouls').mean())
+)
+
+(ggplot(crewGroups, aes(x = 'crew_group', y = 'avg_fouls'))
+  + geom_col(fill = '#3AA845')
+  + geom_text(aes(label = 'avg_fouls'), format_string = '{:.1f}', va = 'bottom')
+  + scale_x_discrete(limits = ['Low-foul crews', 'Middle crews', 'High-foul crews'])
+  + labs(x = '', y = 'Average total fouls per game',
+         title = 'Games with high-foul crews have more fouls')
+)
+
+```
+
+```{python}
+## Same steps we did to X_train
+X_testModel = (X_test
+  .with_columns(pl.col('late_season').cast(pl.Int64))
+  .to_dummies(columns = ['season'], drop_first = False)
+  .select(pl.exclude('season_2017-2018'))
+  .rename(lambda c: c.replace('-', '_'))
+)
+X_testModel = sm.add_constant(X_testModel.to_pandas())
+X_testModel = X_testModel.reindex(columns = X_train.columns, fill_value = 0)
+
+y_pred = fit_05.predict(X_testModel)
+print('Test RMSE:', root_mean_squared_error(y_test.to_pandas(), y_pred))
+
+testPlot = pl.DataFrame({
+  'actual': y_test['total_fouls'].to_numpy(),
+  'predicted': np.asarray(y_pred),
+})
+
+(ggplot(testPlot, aes(x = 'predicted', y = 'actual'))
+  + geom_point(alpha = 0.15)
+  + geom_abline(slope = 1, intercept = 0, color = 'red', linetype = '--')
+  + labs(x = 'Predicted total fouls', y = 'Actual total fouls',
+         title = 'Predictions vs. real games (test data)')
+)
+```
