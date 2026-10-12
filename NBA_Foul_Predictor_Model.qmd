@@ -665,6 +665,7 @@ The Bayesian estimates and 95% credible intervals were very similar to the OLS r
 
 # Milestone 10
 
+## Clean Names for Charts
 ```{python}
 ## Plain-English names for the slides
 niceNames = {
@@ -680,6 +681,7 @@ niceNames = {
 plotOrder = list(niceNames.values())[::-1]  ## top of chart = first in list
 ```
 
+## Visualize Interval Estimates (Main Predictors Only)
 ```{python}
 ciTable = fit_05.conf_int()
 olsDf = pl.DataFrame({
@@ -704,6 +706,7 @@ mainDf = (olsDf
 )
 ```
 
+## OLS vs Bayesian
 ```{python}
 baSum = az.summary(ba_fit, ci_kind = 'hdi', ci_prob = 0.95)
 ## arviz columns: mean, sd, lower, upper, ...
@@ -734,6 +737,7 @@ bothDf = (pl.concat([
 
 ```
 
+## Season Differences
 ```{python}
 seasonDf = (olsDf
   .filter(pl.col('term').str.starts_with('season_'))
@@ -750,6 +754,7 @@ seasonDf = (olsDf
 )
 ```
 
+## Simple Crew Bar Chart
 ```{python}
 crewGroups = (gamesClean
   .with_columns(
@@ -771,6 +776,7 @@ crewGroups = (gamesClean
 
 ```
 
+## Model Accuracy on Test Data
 ```{python}
 ## Same steps we did to X_train
 X_testModel = (X_test
