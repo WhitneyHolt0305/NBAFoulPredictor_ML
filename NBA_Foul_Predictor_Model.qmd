@@ -665,6 +665,12 @@ The Bayesian estimates and 95% credible intervals were very similar to the OLS r
 
 # Milestone 10
 
+```{python}
+import pandas as pd
+from plotnine import *
+from sklearn.metrics import root_mean_squared_error
+```
+
 ## Clean Names for Charts
 ```{python}
 ## Plain-English names for the slides
