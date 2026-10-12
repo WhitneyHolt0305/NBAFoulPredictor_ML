@@ -665,6 +665,7 @@ The Bayesian estimates and 95% credible intervals were very similar to the OLS r
 
 # Milestone 10
 
+## Imports
 ```{python}
 import pandas as pd
 from plotnine import *
@@ -807,5 +808,78 @@ testPlot = pl.DataFrame({
   + geom_abline(slope = 1, intercept = 0, color = 'red', linetype = '--')
   + labs(x = 'Predicted total fouls', y = 'Actual total fouls',
          title = 'Predictions vs. real games (test data)')
+)
+```
+
+
+# Warriors vs. Lakers Prediction
+```{python}
+## ---- FILL IN TUESDAY MORNING ----
+crewToday = ['Referee Name 1', 'Referee Name 2', 'Referee Name 3']
+homeTeam = 'GSW'   ## neutral site, Warriors listed as home
+awayTeam = 'LAL'
+
+## Fix name spellings the same way we did before
+crewToday = [nameFix.get(r, r) for r in crewToday]
+
+## Referee Stats From Last Season
+lastRefs = refStats.filter(pl.col('season') == '2025-2026')
+statCols = ['fouls_per_game', 'experience', 'foul_diff', 'home_win_pct']
+medianRef = {k: float(v) for k, v in lastRefs.select(statCols).median().row(0, named = True).items()}
+
+crewList = []
+for r in crewToday:
+    row = lastRefs.filter(pl.col('referee') == r)
+    if row.height == 0:
+        print(f'{r} not found in 2025-2026 stats, using typical referee instead.')
+        crewList.append(medianRef)
+    else:
+        crewList.append({k: float(v) for k, v in row.select(statCols).row(0, named = True).iteams()})
+crewNow = pl.DataFrame(crewList)
+print(crewNow)
+
+## Team Foul Habits From Last Season
+latest = gamesClean.filter(pl.col('season') == '2025-2026')
+def teamFouls(abbr):
+    return latest.filter(pl.col('home_team_abbr') == abbr)['home_team_fouls'][0]
+
+## Rows - Tuesday's Real Crew + 3 Comparison Crews
+rowNames = ["Tuesday's real crew", 'Low-foul crew', 'Typical crew', 'High-foul crew']
+crewFouls = [
+    crewNow['fouls_per_game'].mean(),
+    latest['crew_fouls_per_game'].quantile(0.10),
+    latest['crew_fouls_per_game'].median(),
+    latest['crew_fouls_per_game'].quantile(0.90),
+]
+
+X_new = pd.DataFrame(0.0, index = range(4), columns = X_train.columns)
+X_new['const'] = 1
+X_new['crew_fouls_per_game'] = crewFouls
+X_new['crew_experience'] = [crewNow['experience'].mean()] + [latest['crew_experience'].median()] * 3
+X_new['crew_foul_diff'] = [crewNow['foul_diff'].mean()] + [latest['crew_foul_diff'].median()] * 3
+X_new['crew_home_win_pct'] = [crewNow['home_win_pct'].mean()] + [latest['crew_home_win_pct'].median()] * 3
+X_new['home_team_fouls'] = teamFouls(homeTeam)
+X_new['away_team_fouls'] = teamFouls(awayTeam)
+X_new['overtime'] = 0
+X_new['late_season'] = 0
+X_new['season_2025_2026'] = 1   ## closest season we have
+
+## Prediction Intervals
+predTable = fit_05.get_prediction(X_new).summary_frame(alpha = 0.05)
+predTable['crew'] = rowNames
+predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']].round(1)
+```
+
+```{python}
+predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']]).withcolumns(real = pl.col('crew') == "Tuesday's real crew"))
+
+(ggplot(predPlot, aes(x='mean', y='crew', color='real'))
++ geom_errorbarh(aes(xmin='obs_ci_lower', xmax='obs_ci_upper'), height=0.2)
++ geom_point(size=4)
++ geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
+  + scale_color_manual(values = {True: '#3AA845', False: 'grey'}, guide = None)
+  + scale_y_discrete(limits = rowNames[::-1])
+  + labs(x = 'Predicted Total Fouls (95% Prediction Interval)', y = '',
+         title = 'Warriors vs. Lakers (Oct 13): Our Prediction')
 )
 ```
