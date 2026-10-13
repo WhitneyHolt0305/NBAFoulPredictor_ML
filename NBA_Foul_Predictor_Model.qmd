@@ -813,11 +813,32 @@ testPlot = pl.DataFrame({
 
 
 # Warriors vs. Lakers Prediction
+
+## Setup
 ```{python}
-## ---- FILL IN TUESDAY MORNING ----
-crewToday = ['Referee Name 1', 'Referee Name 2', 'Referee Name 3']
-homeTeam = 'GSW'   ## neutral site, Warriors listed as home
-awayTeam = 'LAL'
+import numpy as np
+import pandas as pd
+import polars as pl
+from plotnine import *
+
+## Check that earlier pieces exist
+for name in ['refStats', 'nameFix', 'gamesClean', 'fit_05', 'X_train']:
+    if name not in globals():
+        print(f'MISSING: {name} - run the earlier sections of the file first')
+
+nbaGreen = '#3AA845'
+nbaTheme = (theme_minimal()
+  + theme(text = element_text(size = 14),
+          plot_title = element_text(size = 18, weight = 'bold'))
+)
+```
+
+## Prediction
+```{python}
+## ---- TONIGHT'S CREW (official list, Oct 13, 2026) ----
+crewToday = ['Mark Lindsay', 'Dedric Taylor', 'Nate Cearley']
+homeTeam = 'LAL'   ## official list: Golden State @ L.A. Lakers
+awayTeam = 'GSW'
 
 ## Fix name spellings the same way we did before
 crewToday = [nameFix.get(r, r) for r in crewToday]
@@ -834,7 +855,7 @@ for r in crewToday:
         print(f'{r} not found in 2025-2026 stats, using typical referee instead.')
         crewList.append(medianRef)
     else:
-        crewList.append({k: float(v) for k, v in row.select(statCols).row(0, named = True).iteams()})
+        crewList.append({k: float(v) for k, v in row.select(statCols).row(0, named = True).items()})
 crewNow = pl.DataFrame(crewList)
 print(crewNow)
 
@@ -868,18 +889,54 @@ X_new['season_2025_2026'] = 1   ## closest season we have
 predTable = fit_05.get_prediction(X_new).summary_frame(alpha = 0.05)
 predTable['crew'] = rowNames
 predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']].round(1)
+
+## Loss Function: Fouls --> Free-Throw Points
+## ASSUMPTION: ~1.1 free throws per foul x ~78% made = ~0.85 points per foul
+pointsPerFoul = 0.85
+highFouls = predTable.loc[predTable['crew'] == 'High-foul crew', 'mean'].values[0]
+lowFouls = predTable.loc[predTable['crew'] == 'Low-foul crew', 'mean'].values[0]
+extraFouls = highFouls - lowFouls
+
+print(f'High-foul vs low-foul crew: {extraFouls:.1f} more fouls.')
+print(f'That is about {extraFouls * pointsPerFoul:.1f} extra free-throw points in the game.')
 ```
 
+## Prediction Chart
 ```{python}
-predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']]).withcolumns(real = pl.col('crew') == "Tuesday's real crew"))
+predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']])
+  .with_columns(real = pl.col('crew') == "Tuesday's real crew")
+)
 
 (ggplot(predPlot, aes(x='mean', y='crew', color='real'))
+## + geom_vline(xintercept = actualFouls, color = 'red', linetype = '--') ## Shows real result - uncomment on wednesday
 + geom_errorbarh(aes(xmin='obs_ci_lower', xmax='obs_ci_upper'), height=0.2)
 + geom_point(size=4)
 + geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
   + scale_color_manual(values = {True: '#3AA845', False: 'grey'}, guide = None)
   + scale_y_discrete(limits = rowNames[::-1])
   + labs(x = 'Predicted Total Fouls (95% Prediction Interval)', y = '',
-         title = 'Warriors vs. Lakers (Oct 13): Our Prediction')
+         title = 'Warriors @ Lakers (Oct 13): Our Prediction')
 )
+```
+
+## Real Results to Compare Against (Run Wednesday)
+
+```{python}
+from nba_api.stats.endpoints import leaguegamelog
+
+## Pull preseason box scores and find game
+log = leaguegamelog.LeagueGameLog(season = '2026-27', season_type_all_star = 'Pre Season', timeout = 60)
+result = log.get_dict()['resultSets'][0]
+preLog = pl.DataFrame(result['rowSet'], schema=result['headers'], orient = 'row', infer_schema_length=None)
+
+gameRows = preLog.filter(
+    pl.col('Game_Date') == '2026-10-13',
+    pl.col('Team Abbreviation').is_in(['GSW', 'LAL'])
+)
+actualFouls = gameRows['PF'].sum() ## Might need to type number in by had from Box Score
+
+p = predTable.iloc[0]
+print(f"Predicted: {p['mean']:.0f} fouls (range {p['obs_ci_lower']:.0f} to {p['obs_ci_upper']:.0f})")
+print(f'Actual: {actualFouls} fouls')
+print('Inside our range?', p['obs_ci_lower'] <= actualFouls <= p['obs_ci_upper'])
 ```
