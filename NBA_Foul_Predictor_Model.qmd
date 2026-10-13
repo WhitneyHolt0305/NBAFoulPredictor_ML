@@ -901,26 +901,7 @@ print(f'High-foul vs low-foul crew: {extraFouls:.1f} more fouls.')
 print(f'That is about {extraFouls * pointsPerFoul:.1f} extra free-throw points in the game.')
 ```
 
-## Prediction Chart
-```{python}
-predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']])
-  .with_columns(real = pl.col('crew') == "Tuesday's real crew")
-)
-
-(ggplot(predPlot, aes(x='mean', y='crew', color='real'))
-## + geom_vline(xintercept = actualFouls, color = 'red', linetype = '--') ## Shows real result - uncomment on wednesday
-+ geom_errorbarh(aes(xmin='obs_ci_lower', xmax='obs_ci_upper'), height=0.2)
-+ geom_point(size=4)
-+ geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
-  + scale_color_manual(values = {True: '#3AA845', False: 'grey'}, guide = None)
-  + scale_y_discrete(limits = rowNames[::-1])
-  + labs(x = 'Predicted Total Fouls (95% Prediction Interval)', y = '',
-         title = 'Warriors @ Lakers (Oct 13): Our Prediction')
-)
-```
-
 ## Real Results to Compare Against (Run Wednesday)
-
 ```{python}
 from nba_api.stats.endpoints import leaguegamelog
 
@@ -939,4 +920,23 @@ p = predTable.iloc[0]
 print(f"Predicted: {p['mean']:.0f} fouls (range {p['obs_ci_lower']:.0f} to {p['obs_ci_upper']:.0f})")
 print(f'Actual: {actualFouls} fouls')
 print('Inside our range?', p['obs_ci_lower'] <= actualFouls <= p['obs_ci_upper'])
+```
+
+
+## Prediction Chart
+```{python}
+predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']])
+  .with_columns(real = pl.col('crew') == "Tuesday's real crew")
+)
+
+(ggplot(predPlot, aes(x='mean', y='crew', color='real'))
+## + geom_vline(xintercept = actualFouls, color = 'red', linetype = '--') ## Shows real result - uncomment on wednesday
++ geom_errorbarh(aes(xmin='obs_ci_lower', xmax='obs_ci_upper'), height=0.2)
++ geom_point(size=4)
++ geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
+  + scale_color_manual(values = {True: '#3AA845', False: 'grey'}, guide = None)
+  + scale_y_discrete(limits = rowNames[::-1])
+  + labs(x = 'Predicted Total Fouls (95% Prediction Interval)', y = '',
+         title = 'Warriors @ Lakers (Oct 13): Our Prediction')
+)
 ```
