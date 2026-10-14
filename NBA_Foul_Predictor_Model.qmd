@@ -332,9 +332,10 @@ gamesClean.sort('total_fouls', descending=True).select('game_date', 'home_team_a
 ## Does The Crew Actually Matter
 ```{python}
 (ggplot(gamesClean, aes(x = 'crew_fouls_per_game', y = 'total_fouls'))
-    + geom_point(alpha = 0.1)
-    + geom_smooth(method = 'lm', color = 'red')
+    + geom_point(alpha = 0.1, color = nbaGreen)
+    + geom_smooth(method = 'lm', color = 'black')
     + labs(x = 'Crew average fouls per game (season)', y = 'Total fouls in game', title = 'Crew Foul Tendency vs. Total Fouls')
+    + nbaTheme
 )
 ```
 
@@ -775,12 +776,13 @@ mainDf = (olsDf
 )
 
 (ggplot(mainDf, aes(x = 'coef', y = 'label'))
-  + geom_point(size = 3)
-  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2)
+  + geom_point(size = 3, color = nbaGreen)
+  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2, color = nbaGreen)
   + geom_vline(xintercept = 0, color = 'red', linetype = '--')
   + scale_y_discrete(limits = plotOrder)
   + labs(x = 'Change in total fouls (95% interval)', y = '',
          title = 'Referee crews matter more than teams')
+  + nbaTheme
 )
 ```
 
@@ -804,13 +806,14 @@ bothDf = (pl.concat([
 )
 
 (ggplot(bothDf, aes(x = 'coef', y = 'label'))
-  + geom_point(size = 3)
-  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2)
+  + geom_point(size = 3, color = nbaGreen)
+  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2, color = nbaGreen)
   + geom_vline(xintercept = 0, color = 'red', linetype = '--')
   + facet_wrap('~method')
   + scale_y_discrete(limits = plotOrder)
   + labs(x = 'Change in total fouls (95% interval)', y = '',
          title = 'Two methods, same answer')
+  + nbaTheme
 )
 
 ```
@@ -824,11 +827,12 @@ seasonDf = (olsDf
 )
 
 (ggplot(seasonDf, aes(x = 'coef', y = 'label'))
-  + geom_point(size = 3)
-  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2)
+  + geom_point(size = 3, color = nbaGreen)
+  + geom_errorbarh(aes(xmin = 'low', xmax = 'high'), height = 0.2, color = nbaGreen)
   + geom_vline(xintercept = 0, color = 'red', linetype = '--')
   + labs(x = 'Fouls per game compared with 2017-18', y = 'Season',
          title = 'Foul levels change from season to season')
+  + nbaTheme
 )
 ```
 
@@ -845,11 +849,12 @@ crewGroups = (gamesClean
 )
 
 (ggplot(crewGroups, aes(x = 'crew_group', y = 'avg_fouls'))
-  + geom_col(fill = '#3AA845')
+  + geom_col(fill = nbaGreen)
   + geom_text(aes(label = 'avg_fouls'), format_string = '{:.1f}', va = 'bottom')
   + scale_x_discrete(limits = ['Low-foul crews', 'Middle crews', 'High-foul crews'])
   + labs(x = '', y = 'Average total fouls per game',
          title = 'Games with high-foul crews have more fouls')
+  + nbaTheme
 )
 
 ```
@@ -875,10 +880,11 @@ testPlot = pl.DataFrame({
 })
 
 (ggplot(testPlot, aes(x = 'predicted', y = 'actual'))
-  + geom_point(alpha = 0.15)
+  + geom_point(alpha = 0.15, color = nbaGreen)
   + geom_abline(slope = 1, intercept = 0, color = 'red', linetype = '--')
   + labs(x = 'Predicted total fouls', y = 'Actual total fouls',
          title = 'Predictions vs. real games (test data)')
+  + nbaTheme
 )
 ```
 
@@ -971,15 +977,23 @@ print(f'That is about {extraFouls * pointsPerFoul:.1f} extra free-throw points i
 from nba_api.stats.endpoints import leaguegamelog
 
 ## Pull preseason box scores and find game
-log = leaguegamelog.LeagueGameLog(season = '2026-27', season_type_all_star = 'Pre Season', timeout = 60)
-result = log.get_dict()['resultSets'][0]
-preLog = pl.DataFrame(result['rowSet'], schema=result['headers'], orient = 'row', infer_schema_length=None)
+## (try/except - if the NBA site doesn't respond, the file still renders)
+try:
+    log = leaguegamelog.LeagueGameLog(season = '2026-27', season_type_all_star = 'Pre Season', timeout = 60)
+    result = log.get_dict()['resultSets'][0]
+    preLog = pl.DataFrame(result['rowSet'], schema=result['headers'], orient = 'row', infer_schema_length=None)
 
-gameRows = preLog.filter(
-    pl.col('Game_Date') == '2026-10-13',
-    pl.col('Team Abbreviation').is_in(['GSW', 'LAL'])
-)
-actualFouls = gameRows['PF'].sum() ## Might need to type number in by had from Box Score
+    gameRows = preLog.filter(
+        pl.col('GAME_DATE') == '2026-10-13',
+        pl.col('TEAM_ABBREVIATION').is_in(['GSW', 'LAL'])
+    )
+    actualFouls = gameRows['PF'].sum() ## Both teams' personal fouls added together
+except Exception as e:
+    print('Could not reach the NBA site:', e)
+    actualFouls = 0
+
+## If actualFouls shows 0, type the number in by hand from the box score, e.g.:
+## actualFouls = 42
 
 p = predTable.iloc[0]
 print(f"Predicted: {p['mean']:.0f} fouls (range {p['obs_ci_lower']:.0f} to {p['obs_ci_upper']:.0f})")
@@ -991,7 +1005,7 @@ print('Inside our range?', p['obs_ci_lower'] <= actualFouls <= p['obs_ci_upper']
 ## Prediction Chart
 ```{python}
 predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']])
-  .with_columns(real = pl.col('crew') == "Tuesday's real crew")
+  .with_columns(real = pl.col('crew') == 'Actual crew (Oct 13)')
 )
 
 (ggplot(predPlot, aes(x='mean', y='crew', color='real'))
@@ -999,9 +1013,10 @@ predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_up
 + geom_errorbarh(aes(xmin='obs_ci_lower', xmax='obs_ci_upper'), height=0.2)
 + geom_point(size=4)
 + geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
-  + scale_color_manual(values = {True: '#3AA845', False: 'grey'}, guide = None)
+  + scale_color_manual(values = {True: nbaGreen, False: 'grey'}, guide = None)
   + scale_y_discrete(limits = rowNames[::-1])
   + labs(x = 'Predicted Total Fouls (95% Prediction Interval)', y = '',
          title = 'Warriors @ Lakers (Oct 13): Our Prediction')
+  + nbaTheme
 )
 ```
