@@ -14,6 +14,14 @@ import numpy as np
 import polars as pl
 from pyprojroot.here import here
 from IPython.display import display ## just to remove an error
+from plotnine import *
+
+## Presentation colors - use on EVERY chart
+nbaGreen = '#3AA845'
+nbaTheme = (theme_minimal()
+  + theme(text = element_text(size = 14),
+          plot_title = element_text(size = 18, weight = 'bold'))
+)
 
 ## To fix format of PDF output
 pl.Config.set_tbl_cols(8);    ## show at most 8 columns
@@ -287,8 +295,10 @@ from plotnine import *
 import pyarrow
 
 (ggplot(gamesClean, aes(x = 'total_fouls'))
-    + geom_histogram(binwidth=1)
-    + labs(x = 'Total fouls in game', y = 'Number of games', title = 'Distribution of Total Fouls Per Game')
+    + geom_histogram(binwidth = 1, fill = nbaGreen)
+    + labs(x = 'Total fouls in game', y = 'Number of games',
+           title = 'Most games have 35–44 fouls')
+    + nbaTheme
 )
 ```
 
@@ -308,11 +318,13 @@ gamesClean.sort('total_fouls').select('game_date', 'home_team_abbr', 'away_team_
 gamesClean.sort('total_fouls', descending=True).select('game_date', 'home_team_abbr', 'away_team_abbr', 'total_fouls').head(10)
 ```
 
-## Fouls Over Time
+## Fouls Over Time - BoxPlot
 ```{python}
 (ggplot(gamesClean, aes(x = 'season', y = 'total_fouls'))
-    + geom_boxplot()
-    + labs(x = 'Season', y = 'Total fouls in game', title = 'Total Fouls Per Game by Season')
+    + geom_boxplot(fill = nbaGreen, alpha = 0.6)
+    + labs(x = 'Season', y = 'Total fouls in game',
+           title = 'Foul levels change each season')
+    + nbaTheme
     + theme(axis_text_x = element_text(rotation = 45, ha = 'right'))
 )
 ```
@@ -323,6 +335,65 @@ gamesClean.sort('total_fouls', descending=True).select('game_date', 'home_team_a
     + geom_point(alpha = 0.1)
     + geom_smooth(method = 'lm', color = 'red')
     + labs(x = 'Crew average fouls per game (season)', y = 'Total fouls in game', title = 'Crew Foul Tendency vs. Total Fouls')
+)
+```
+
+## Referees Are Consistent Year-Year
+```{python}
+## Referees Are Consistent Year to Year
+refPairs = (refStats
+  .select('season', 'referee', 'fouls_per_game')
+  .with_columns(start = pl.col('season').str.slice(0, 4).cast(pl.Int64))
+)
+refPairs = refPairs.join(
+  refPairs.with_columns(start = pl.col('start') + 1),
+  on = ['referee', 'start'], suffix = '_last'
+)
+
+(ggplot(refPairs, aes(x = 'fouls_per_game_last', y = 'fouls_per_game'))
+  + geom_point(color = nbaGreen, alpha = 0.5)
+  + geom_smooth(method = 'lm', color = 'black')
+  + labs(x = 'Fouls per game called (last season)', y = 'Fouls per game called (this season)',
+         title = 'Referees are consistent year to year')
+  + nbaTheme
+)
+```
+
+## Overtime Adds Fouls
+```{python}
+## Overtime Adds Fouls
+otData = (gamesClean
+  .with_columns(ot_group = pl.when(pl.col('overtime') == 0).then(pl.lit('No OT'))
+                  .when(pl.col('overtime') == 1).then(pl.lit('1 OT'))
+                  .otherwise(pl.lit('2+ OT')))
+  .group_by('ot_group')
+  .agg(avg_fouls = pl.col('total_fouls').mean())
+)
+
+(ggplot(otData, aes(x = 'ot_group', y = 'avg_fouls'))
+  + geom_col(fill = nbaGreen)
+  + geom_text(aes(label = 'avg_fouls'), format_string = '{:.1f}', va = 'bottom')
+  + scale_x_discrete(limits = ['No OT', '1 OT', '2+ OT'])
+  + labs(x = '', y = 'Average total fouls', title = 'Overtime adds fouls')
+  + nbaTheme
+)
+```
+
+## Some Referees Call Far More Fouls Than Others
+```{python}
+## Most and Fewest Fouls by Referee (2025-26)
+lastSeason = refStats.filter(pl.col('season') == '2025-2026', pl.col('games') >= 30)
+refExtremes = pl.concat([
+  lastSeason.sort('fouls_per_game').head(5),
+  lastSeason.sort('fouls_per_game').tail(5),
+])
+
+(ggplot(refExtremes, aes(x = 'fouls_per_game', y = 'referee'))
+  + geom_col(fill = nbaGreen)
+  + scale_y_discrete(limits = refExtremes['referee'].to_list())
+  + labs(x = 'Fouls per game (2025-26)', y = '',
+         title = 'Some referees call far more fouls than others')
+  + nbaTheme
 )
 ```
 
@@ -825,12 +896,6 @@ from plotnine import *
 for name in ['refStats', 'nameFix', 'gamesClean', 'fit_05', 'X_train']:
     if name not in globals():
         print(f'MISSING: {name} - run the earlier sections of the file first')
-
-nbaGreen = '#3AA845'
-nbaTheme = (theme_minimal()
-  + theme(text = element_text(size = 14),
-          plot_title = element_text(size = 18, weight = 'bold'))
-)
 ```
 
 ## Prediction
@@ -865,7 +930,7 @@ def teamFouls(abbr):
     return latest.filter(pl.col('home_team_abbr') == abbr)['home_team_fouls'][0]
 
 ## Rows - Tuesday's Real Crew + 3 Comparison Crews
-rowNames = ["Tuesday's real crew", 'Low-foul crew', 'Typical crew', 'High-foul crew']
+rowNames = ['Actual crew (Oct 13)', 'Low-foul crew', 'Typical crew', 'High-foul crew']
 crewFouls = [
     crewNow['fouls_per_game'].mean(),
     latest['crew_fouls_per_game'].quantile(0.10),
@@ -888,7 +953,7 @@ X_new['season_2025_2026'] = 1   ## closest season we have
 ## Prediction Intervals
 predTable = fit_05.get_prediction(X_new).summary_frame(alpha = 0.05)
 predTable['crew'] = rowNames
-predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']].round(1)
+print(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_upper']].round(1))
 
 ## Loss Function: Fouls --> Free-Throw Points
 ## ASSUMPTION: ~1.1 free throws per foul x ~78% made = ~0.85 points per foul
