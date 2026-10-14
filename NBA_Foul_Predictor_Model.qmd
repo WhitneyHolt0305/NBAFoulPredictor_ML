@@ -993,7 +993,7 @@ except Exception as e:
     actualFouls = 0
 
 ## If actualFouls shows 0, type the number in by hand from the box score, e.g.:
-## actualFouls = 42
+actualFouls = 50
 
 p = predTable.iloc[0]
 print(f"Predicted: {p['mean']:.0f} fouls (range {p['obs_ci_lower']:.0f} to {p['obs_ci_upper']:.0f})")
@@ -1009,7 +1009,7 @@ predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_up
 )
 
 (ggplot(predPlot, aes(x='mean', y='crew', color='real'))
-## + geom_vline(xintercept = actualFouls, color = 'red', linetype = '--') ## Shows real result - uncomment on wednesday
++ geom_vline(xintercept = actualFouls, color = 'red', linetype = '--') ## Shows real result - uncomment on wednesday
 + geom_errorbarh(aes(xmin='obs_ci_lower', xmax='obs_ci_upper'), height=0.2)
 + geom_point(size=4)
 + geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
