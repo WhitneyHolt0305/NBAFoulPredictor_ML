@@ -1015,8 +1015,8 @@ predPlot = (pl.from_pandas(predTable[['crew', 'mean', 'obs_ci_lower', 'obs_ci_up
 + geom_text(aes(label = 'mean'), format_string = '{:.0f} fouls', nudge_y = 0.3)
   + scale_color_manual(values = {True: nbaGreen, False: 'grey'}, guide = None)
   + scale_y_discrete(limits = rowNames[::-1])
-  + labs(x = 'Predicted Total Fouls (95% Prediction Interval)', y = '',
-         title = 'Warriors @ Lakers (Oct 13): Our Prediction')
+    + labs(x = 'Predicted total fouls (95% prediction interval)', y = '',
+         title = 'Predicted 39, Actual 50: Inside Our Range')
   + nbaTheme
 )
 ```
