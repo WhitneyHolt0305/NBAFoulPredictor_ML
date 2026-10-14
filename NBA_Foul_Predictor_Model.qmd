@@ -20,7 +20,10 @@ from plotnine import *
 nbaGreen = '#3AA845'
 nbaTheme = (theme_minimal()
   + theme(text = element_text(size = 14),
-          plot_title = element_text(size = 18, weight = 'bold'))
+          plot_title = element_text(size = 18, weight = 'bold', margin = {'b': 10}),  ## space under title
+          axis_title_y = element_text(margin = {'r': 12}),   ## space between y label and numbers
+          axis_title_x = element_text(margin = {'t': 8}),    ## space between x label and numbers
+          figure_size = (9, 5.5))                            ## fixed size so text doesn't overlap
 )
 
 ## To fix format of PDF output
